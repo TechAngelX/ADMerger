@@ -1,7 +1,8 @@
-// ./Program.cs
+// Program.cs
 
 using System;
 using System.Windows.Forms;
+using ADMerger.Services;
 
 namespace ADMerger
 {
@@ -12,7 +13,21 @@ namespace ADMerger
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            
+            var csvService = new CsvService();
+            var equivalencyService = new EquivalencyService();
+            var matchingService = new InstitutionMatchingService();
+            var rankingService = new RankingService(matchingService);
+            var gradeService = new GradeClassificationService(equivalencyService);
+            
+            var mainForm = new MainForm(
+                csvService,
+                equivalencyService,
+                rankingService,
+                gradeService
+            );
+            
+            Application.Run(mainForm);
         }
     }
 }

@@ -54,6 +54,10 @@
               "target": "Package",
               "version": "[33.1.0, )"
             },
+            "EPPlus": {
+              "target": "Package",
+              "version": "[7.5.2, )"
+            },
             "Microsoft.NET.ILLink.Tasks": {
               "suppressParent": "All",
               "target": "Package",

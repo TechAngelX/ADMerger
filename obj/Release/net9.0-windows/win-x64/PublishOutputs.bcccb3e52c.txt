@@ -1,3 +1,4 @@
 C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\publish\ADMerger.pdb
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\publish\data\THE Ranking 2026.xlsx
 C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\publish\data\ucl_degree_equivalencies_FINAL.csv
 C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\publish\ADMerger.exe

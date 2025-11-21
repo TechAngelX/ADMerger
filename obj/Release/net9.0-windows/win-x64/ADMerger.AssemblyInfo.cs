@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ADMerger")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+38ca0bf486d4f278f7595d2910eb0108768380cf")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3d21f8bd9cfa333f28c0e108b8018c9ad4bf24dc")]
 [assembly: System.Reflection.AssemblyProductAttribute("ADMerger")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ADMerger")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

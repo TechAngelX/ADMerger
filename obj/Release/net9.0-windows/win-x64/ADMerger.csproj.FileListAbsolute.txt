@@ -282,3 +282,16 @@ C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\obj\Release\net9.0-windows\win-x64
 C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\obj\Release\net9.0-windows\win-x64\ADMerger.pdb
 C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\obj\Release\net9.0-windows\win-x64\ADMerger.genruntimeconfig.cache
 C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\obj\Release\net9.0-windows\win-x64\ref\ADMerger.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\data\THE Ranking 2026.xlsx
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\EPPlus.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\EPPlus.Interfaces.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\EPPlus.System.Drawing.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\Microsoft.Extensions.Configuration.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\Microsoft.Extensions.Configuration.FileExtensions.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\Microsoft.Extensions.Configuration.Json.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\Microsoft.Extensions.FileProviders.Physical.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\Microsoft.Extensions.FileSystemGlobbing.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\Microsoft.Extensions.Primitives.dll
+C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger\bin\Release\net9.0-windows\win-x64\Microsoft.IO.RecyclableMemoryStream.dll

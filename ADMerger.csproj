@@ -6,14 +6,21 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.1.0" />
+    <PackageReference Include="EPPlus" Version="7.5.2" />
   </ItemGroup>
+  
   <ItemGroup>
     <EmbeddedResource Include="data\ucl_degree_equivalencies_FINAL.csv" />
   </ItemGroup>
+  
   <ItemGroup>
     <None Update="data\ucl_degree_equivalencies_FINAL.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="data\THE Ranking 2026.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
