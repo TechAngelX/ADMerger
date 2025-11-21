@@ -1,0 +1,920 @@
+[
+  {
+    "country": "Monaco",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Afghanistan",
+    "2.2_requirement": "N/A",
+    "2.1_requirement": "N/A",
+    "1st_requirement": "N/A"
+  },
+  {
+    "country": "Argentina",
+    "2.2_requirement": "'7.5/10",
+    "2.1_requirement": "'8/10",
+    "1st_requirement": "'9/10"
+  },
+  {
+    "country": "Austria",
+    "2.2_requirement": "The award of any of the following: Bachelors degree with an overall average mark of 3 to 1 Diplom (a...",
+    "2.1_requirement": "The award of any of the following: Bachelors degree with an overall average mark of 2 to 1 Diplom (a...",
+    "1st_requirement": "The award of any of the following: Bachelors degree with an overall average mark of 1.5 to 1 Diplom ..."
+  },
+  {
+    "country": "Albania",
+    "2.2_requirement": "'8/10",
+    "2.1_requirement": "'9/10",
+    "1st_requirement": "'10/10"
+  },
+  {
+    "country": "Armenia",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.5/4.0",
+    "1st_requirement": "'4.0/4.0"
+  },
+  {
+    "country": "Azerbaijan",
+    "2.2_requirement": "71%",
+    "2.1_requirement": "81%",
+    "1st_requirement": "91%"
+  },
+  {
+    "country": "Algeria",
+    "2.2_requirement": "'14/20",
+    "2.1_requirement": "'16/20",
+    "1st_requirement": "'18/20"
+  },
+  {
+    "country": "Australia",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'4.0/4.0",
+    "1st_requirement": "85%"
+  },
+  {
+    "country": "Bahrain",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Belarus",
+    "2.2_requirement": "'4/5",
+    "2.1_requirement": "'4.5/5",
+    "1st_requirement": "'5/5"
+  },
+  {
+    "country": "Bolivia",
+    "2.2_requirement": "70%",
+    "2.1_requirement": "80%",
+    "1st_requirement": "90%"
+  },
+  {
+    "country": "Brazil",
+    "2.2_requirement": "'6/10",
+    "2.1_requirement": "'7/10",
+    "1st_requirement": "'8/10"
+  },
+  {
+    "country": "Bangladesh",
+    "2.2_requirement": "'3.5/4.0",
+    "2.1_requirement": "'4.0/4.0",
+    "1st_requirement": "The award of any of the following:"
+  },
+  {
+    "country": "Belgium",
+    "2.2_requirement": "70%",
+    "2.1_requirement": "75%",
+    "1st_requirement": "80%"
+  },
+  {
+    "country": "Bosnia and Herzegovina",
+    "2.2_requirement": "'4/5",
+    "2.1_requirement": "'4.5/5",
+    "1st_requirement": "'5/5"
+  },
+  {
+    "country": "Brunei",
+    "2.2_requirement": "2.2",
+    "2.1_requirement": "2.1",
+    "1st_requirement": "The award of any of the following:"
+  },
+  {
+    "country": "Barbados",
+    "2.2_requirement": "2.2",
+    "2.1_requirement": "2.1",
+    "1st_requirement": "The award of any of the following: Bachelors degree from the University of the West Indies with Firs..."
+  },
+  {
+    "country": "Belize",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Botswana",
+    "2.2_requirement": "65%",
+    "2.1_requirement": "70%",
+    "1st_requirement": "75%"
+  },
+  {
+    "country": "Bulgaria",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'6/6"
+  },
+  {
+    "country": "Cambodia",
+    "2.2_requirement": "70%",
+    "2.1_requirement": "80%",
+    "1st_requirement": "The award of any of the following:"
+  },
+  {
+    "country": "Caribbean/West Indies",
+    "2.2_requirement": "2.2",
+    "2.1_requirement": "2.1",
+    "1st_requirement": "The award of any of the following: Bachelors degree from the University of the West Indies with Firs..."
+  },
+  {
+    "country": "Colombia",
+    "2.2_requirement": "'3.5/5.0",
+    "2.1_requirement": "'4.0/5.0",
+    "1st_requirement": "'4.5/5.0"
+  },
+  {
+    "country": "Croatia",
+    "2.2_requirement": "'4/5",
+    "2.1_requirement": "'4.5/5",
+    "1st_requirement": "'5/5"
+  },
+  {
+    "country": "Czech Republic",
+    "2.2_requirement": "The award of any of the following: Bachelors degree (awarded 2004 onwards ) with a final grade of ‘ ...",
+    "2.1_requirement": "The award of any of the following: Bachelors degree (awarded 2004 onwards ) with a final grade of ‘ ...",
+    "1st_requirement": "The award of any of the following: Bachelors degree (awarded 2004 onwards ) with a final grade of ‘ ..."
+  },
+  {
+    "country": "Cameroon",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Chile",
+    "2.2_requirement": "'5/7",
+    "2.1_requirement": "'5.5/7",
+    "1st_requirement": "'6/7"
+  },
+  {
+    "country": "Congo, DR",
+    "2.2_requirement": "N/A",
+    "2.1_requirement": "N/A",
+    "1st_requirement": "N/A"
+  },
+  {
+    "country": "Cuba",
+    "2.2_requirement": "'4/5",
+    "2.1_requirement": "'4.5/5",
+    "1st_requirement": "The award of any of the following:"
+  },
+  {
+    "country": "Canada",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "China",
+    "2.2_requirement": "85%",
+    "2.1_requirement": "90%",
+    "1st_requirement": "95%"
+  },
+  {
+    "country": "Costa Rica",
+    "2.2_requirement": "'7.5/10",
+    "2.1_requirement": "'8.5/10",
+    "1st_requirement": "'9.5/10"
+  },
+  {
+    "country": "Cyprus (Greek and Turkish Sectors)",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.85/4.0"
+  },
+  {
+    "country": "Denmark",
+    "2.2_requirement": "'9/13",
+    "2.1_requirement": "'10/13",
+    "1st_requirement": "'13/13"
+  },
+  {
+    "country": "Dominican Republic",
+    "2.2_requirement": "80%",
+    "2.1_requirement": "85%",
+    "1st_requirement": "The award of any of the following:"
+  },
+  {
+    "country": "Ecuador",
+    "2.2_requirement": "'3.2/4.0",
+    "2.1_requirement": "'3.5/4.0",
+    "1st_requirement": "'3.8/4.0"
+  },
+  {
+    "country": "Eritrea",
+    "2.2_requirement": "The award of any of the following: Degrees from Eritrea are not acceptable for entry to any level of...",
+    "2.1_requirement": "The award of any of the following: Degrees from Eritrea are not acceptable for entry to any level of...",
+    "1st_requirement": "The award of any of the following: Degrees from Eritrea are not acceptable for entry to any level of..."
+  },
+  {
+    "country": "European Baccalaureate",
+    "2.2_requirement": "N/A",
+    "2.1_requirement": "N/A",
+    "1st_requirement": "N/A"
+  },
+  {
+    "country": "Egypt",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Estonia",
+    "2.2_requirement": "'4/5",
+    "2.1_requirement": "'4.5/5",
+    "1st_requirement": "'5/5"
+  },
+  {
+    "country": "El Salvador",
+    "2.2_requirement": "'8/10",
+    "2.1_requirement": "'9/10",
+    "1st_requirement": "'10/10"
+  },
+  {
+    "country": "Ethiopia",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Fiji",
+    "2.2_requirement": "'3.5/5.0",
+    "2.1_requirement": "'4.0/5.0",
+    "1st_requirement": "'4.5/5.0"
+  },
+  {
+    "country": "Finland",
+    "2.2_requirement": "'3/5",
+    "2.1_requirement": "'4/5",
+    "1st_requirement": "'5/5"
+  },
+  {
+    "country": "France",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Gambia",
+    "2.2_requirement": "'3.3/4.3",
+    "2.1_requirement": "'3.7/4.3",
+    "1st_requirement": "'4.0/4.3"
+  },
+  {
+    "country": "Ghana",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.5/4.0",
+    "1st_requirement": "'3.8/4.0"
+  },
+  {
+    "country": "Guyana",
+    "2.2_requirement": "65%",
+    "2.1_requirement": "75%",
+    "1st_requirement": "85%"
+  },
+  {
+    "country": "Georgia",
+    "2.2_requirement": "80%",
+    "2.1_requirement": "85%",
+    "1st_requirement": "90%"
+  },
+  {
+    "country": "Greece",
+    "2.2_requirement": "'3.6/4.0",
+    "2.1_requirement": "'7.5/10",
+    "1st_requirement": "'8.5/10"
+  },
+  {
+    "country": "Germany",
+    "2.2_requirement": "'7/18",
+    "2.1_requirement": "'8/18",
+    "1st_requirement": "The award of any of the following: Bachelors degree with a final overall grade of 1.5 to 1 Diplom / ..."
+  },
+  {
+    "country": "Guatemala",
+    "2.2_requirement": "80%",
+    "2.1_requirement": "90%",
+    "1st_requirement": "95%"
+  },
+  {
+    "country": "Honduras",
+    "2.2_requirement": "80%",
+    "2.1_requirement": "85%",
+    "1st_requirement": "90%"
+  },
+  {
+    "country": "Hong Kong",
+    "2.2_requirement": "2.2",
+    "2.1_requirement": "2.1",
+    "1st_requirement": "The award of any of the following from a recognised institution: Bachelors (Honours) with First Clas..."
+  },
+  {
+    "country": "Hungary",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'5.0/5.0"
+  },
+  {
+    "country": "Iceland",
+    "2.2_requirement": "'6.5/10",
+    "2.1_requirement": "'7.5/10",
+    "1st_requirement": "'9/10"
+  },
+  {
+    "country": "Iran",
+    "2.2_requirement": "'14/20",
+    "2.1_requirement": "'16/20",
+    "1st_requirement": "'18/20"
+  },
+  {
+    "country": "Israel",
+    "2.2_requirement": "75%",
+    "2.1_requirement": "80%",
+    "1st_requirement": "85%"
+  },
+  {
+    "country": "International Baccalaureate",
+    "2.2_requirement": "N/A",
+    "2.1_requirement": "N/A",
+    "1st_requirement": "N/A"
+  },
+  {
+    "country": "India",
+    "2.2_requirement": "'6.5/10.0",
+    "2.1_requirement": "'7.5/10.0",
+    "1st_requirement": "'8.0/10.0"
+  },
+  {
+    "country": "Iraq",
+    "2.2_requirement": "70%",
+    "2.1_requirement": "80%",
+    "1st_requirement": "90%"
+  },
+  {
+    "country": "Italy",
+    "2.2_requirement": "'3.3/4.0",
+    "2.1_requirement": "'3.6/4.0",
+    "1st_requirement": "'110/110"
+  },
+  {
+    "country": "Indonesia",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Ireland",
+    "2.2_requirement": "The award of any of the following: Bachelors with Second Class Honours Grade II Bachelors with Secon...",
+    "2.1_requirement": "The award of any of the following: Bachelors with Second Class Honours Grade I Bachelors with Second...",
+    "1st_requirement": "1.0"
+  },
+  {
+    "country": "Ivory Coast",
+    "2.2_requirement": "'11/20",
+    "2.1_requirement": "'13/20",
+    "1st_requirement": "'16/20"
+  },
+  {
+    "country": "Jamaica",
+    "2.2_requirement": "The award of any of the following: Bachelors from the University of the West Indies with Class II Lo...",
+    "2.1_requirement": "The award of any of the following: Bachelors from the University of the West Indies with Class II Up...",
+    "1st_requirement": "The award of any of the following: Bachelors from the University of the West Indies with First Class..."
+  },
+  {
+    "country": "Japan",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.5/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Jordan",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.5/4.0",
+    "1st_requirement": "'4.0/4.0"
+  },
+  {
+    "country": "Kazakhstan",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Kuwait",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Kenya",
+    "2.2_requirement": "2.2",
+    "2.1_requirement": "2.1",
+    "1st_requirement": "1.0"
+  },
+  {
+    "country": "Kyrgyzstan",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Kosovo",
+    "2.2_requirement": "'7/10",
+    "2.1_requirement": "'8/10",
+    "1st_requirement": "'9/10"
+  },
+  {
+    "country": "Latvia",
+    "2.2_requirement": "'7/10",
+    "2.1_requirement": "'8/10",
+    "1st_requirement": "'9/10"
+  },
+  {
+    "country": "Liberia",
+    "2.2_requirement": "80%",
+    "2.1_requirement": "85%",
+    "1st_requirement": "90%"
+  },
+  {
+    "country": "Lithuania",
+    "2.2_requirement": "'7/10",
+    "2.1_requirement": "'8/10",
+    "1st_requirement": "'10/10"
+  },
+  {
+    "country": "Lebanon",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Libya",
+    "2.2_requirement": "80%",
+    "2.1_requirement": "90%",
+    "1st_requirement": "95%"
+  },
+  {
+    "country": "Luxembourg",
+    "2.2_requirement": "'14/20",
+    "2.1_requirement": "'16/20",
+    "1st_requirement": "'18/20"
+  },
+  {
+    "country": "Lesotho",
+    "2.2_requirement": "70%",
+    "2.1_requirement": "75%",
+    "1st_requirement": "80%"
+  },
+  {
+    "country": "Lichtenstein",
+    "2.2_requirement": "'4.5/6.0",
+    "2.1_requirement": "'5.0/6.0",
+    "1st_requirement": "'5.5/6.0"
+  },
+  {
+    "country": "Macau",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Malawi",
+    "2.2_requirement": "60%",
+    "2.1_requirement": "70%",
+    "1st_requirement": "80%"
+  },
+  {
+    "country": "Mauritius",
+    "2.2_requirement": "2.1",
+    "2.1_requirement": "2.1",
+    "1st_requirement": "1.0"
+  },
+  {
+    "country": "Morocco",
+    "2.2_requirement": "'14/20",
+    "2.1_requirement": "'16/20",
+    "1st_requirement": "'18/20"
+  },
+  {
+    "country": "Macedonia (Republic of North Macedonia)",
+    "2.2_requirement": "'7/10",
+    "2.1_requirement": "'8/10",
+    "1st_requirement": "'9/10"
+  },
+  {
+    "country": "Malaysia",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Mexico",
+    "2.2_requirement": "'8/10",
+    "2.1_requirement": "'8.5/10",
+    "1st_requirement": "'9/10"
+  },
+  {
+    "country": "Mongolia",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Mozambique",
+    "2.2_requirement": "'16/20",
+    "2.1_requirement": "'18/20",
+    "1st_requirement": "'18/20"
+  },
+  {
+    "country": "Madagascar",
+    "2.2_requirement": "'13/20",
+    "2.1_requirement": "'15/20",
+    "1st_requirement": "'17/20"
+  },
+  {
+    "country": "Malta",
+    "2.2_requirement": "60%",
+    "2.1_requirement": "2.1",
+    "1st_requirement": "1.0"
+  },
+  {
+    "country": "Moldova",
+    "2.2_requirement": "'8/10",
+    "2.1_requirement": "'9/10",
+    "1st_requirement": "'10/10"
+  },
+  {
+    "country": "Montenegro",
+    "2.2_requirement": "'7/10",
+    "2.1_requirement": "'8/10",
+    "1st_requirement": "'9/10"
+  },
+  {
+    "country": "Myanmar",
+    "2.2_requirement": "70%",
+    "2.1_requirement": "80%",
+    "1st_requirement": "90%"
+  },
+  {
+    "country": "Namibia",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "New Zealand",
+    "2.2_requirement": "B",
+    "2.1_requirement": "B",
+    "1st_requirement": "1.0"
+  },
+  {
+    "country": "Norway",
+    "2.2_requirement": "C",
+    "2.1_requirement": "B",
+    "1st_requirement": "C"
+  },
+  {
+    "country": "Nepal",
+    "2.2_requirement": "65%",
+    "2.1_requirement": "75%",
+    "1st_requirement": "85%"
+  },
+  {
+    "country": "Nicaragua",
+    "2.2_requirement": "90%",
+    "2.1_requirement": "95%",
+    "1st_requirement": "N/A"
+  },
+  {
+    "country": "Netherlands",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Nigeria",
+    "2.2_requirement": "55%",
+    "2.1_requirement": "63%",
+    "1st_requirement": "75%"
+  },
+  {
+    "country": "Oman",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Pakistan",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.5/4.0",
+    "1st_requirement": "'4.0/4.0"
+  },
+  {
+    "country": "Papua New Guinea",
+    "2.2_requirement": "B",
+    "2.1_requirement": "The award of any of the following: Bachelors (Honours) degree with an overall classification of Clas...",
+    "1st_requirement": "The award of any of the following: Bachelors (Honours) degree with an overall classification of Firs..."
+  },
+  {
+    "country": "Philippines",
+    "2.2_requirement": "'4/4",
+    "2.1_requirement": "'3.5/4.0",
+    "1st_requirement": "'4.0/4.0"
+  },
+  {
+    "country": "Palestine",
+    "2.2_requirement": "80%",
+    "2.1_requirement": "85%",
+    "1st_requirement": "90%"
+  },
+  {
+    "country": "Paraguay",
+    "2.2_requirement": "'4/5",
+    "2.1_requirement": "'4.5/5",
+    "1st_requirement": "'5/5"
+  },
+  {
+    "country": "Poland",
+    "2.2_requirement": "'4/5",
+    "2.1_requirement": "'4.5/5",
+    "1st_requirement": "'5/5"
+  },
+  {
+    "country": "Panama",
+    "2.2_requirement": "81%",
+    "2.1_requirement": "91%",
+    "1st_requirement": "95%"
+  },
+  {
+    "country": "Peru",
+    "2.2_requirement": "'15/20.",
+    "2.1_requirement": "'17/20.",
+    "1st_requirement": "'19/20."
+  },
+  {
+    "country": "Portugal",
+    "2.2_requirement": "'14/20",
+    "2.1_requirement": "'16/20",
+    "1st_requirement": "'18/20"
+  },
+  {
+    "country": "Qatar",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Romania",
+    "2.2_requirement": "'7/10",
+    "2.1_requirement": "'8/10",
+    "1st_requirement": "'9.5/10"
+  },
+  {
+    "country": "Russia",
+    "2.2_requirement": "'4/5",
+    "2.1_requirement": "'4.5/5",
+    "1st_requirement": "'5/5"
+  },
+  {
+    "country": "Rwanda",
+    "2.2_requirement": "2.2",
+    "2.1_requirement": "2.1",
+    "1st_requirement": "1.0"
+  },
+  {
+    "country": "Saudi Arabia",
+    "2.2_requirement": "'3.5/5.0",
+    "2.1_requirement": "'4.5/5.0",
+    "1st_requirement": "'4.75/5.0"
+  },
+  {
+    "country": "Serbia",
+    "2.2_requirement": "'7/10",
+    "2.1_requirement": "'8/10",
+    "1st_requirement": "'9/10"
+  },
+  {
+    "country": "Slovakia",
+    "2.2_requirement": "C",
+    "2.1_requirement": "B",
+    "1st_requirement": "The award of any of the following from a recognised institution: Bachelors degree awarded 2005 onwar..."
+  },
+  {
+    "country": "South Africa",
+    "2.2_requirement": "60%",
+    "2.1_requirement": "N/A",
+    "1st_requirement": "N/A"
+  },
+  {
+    "country": "Sri Lanka",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Sweden",
+    "2.2_requirement": "B",
+    "2.1_requirement": "B",
+    "1st_requirement": "The award of any of the following: Bachelors degree or Professional degree with a minimum of 180 ECT..."
+  },
+  {
+    "country": "Scotland",
+    "2.2_requirement": "N/A",
+    "2.1_requirement": "N/A",
+    "1st_requirement": "N/A"
+  },
+  {
+    "country": "Sierra Leone",
+    "2.2_requirement": "50%",
+    "2.1_requirement": "60%",
+    "1st_requirement": "70%"
+  },
+  {
+    "country": "Slovenia",
+    "2.2_requirement": "'7/10",
+    "2.1_requirement": "'8/10",
+    "1st_requirement": "'9/10"
+  },
+  {
+    "country": "South Korea",
+    "2.2_requirement": "N/A",
+    "2.1_requirement": "'3.5/4.5",
+    "1st_requirement": "'4.0/4.5"
+  },
+  {
+    "country": "Sudan",
+    "2.2_requirement": "60%",
+    "2.1_requirement": "70%",
+    "1st_requirement": "80%"
+  },
+  {
+    "country": "Switzerland",
+    "2.2_requirement": "'4.5/6.0",
+    "2.1_requirement": "'5/6",
+    "1st_requirement": "'5.5/6"
+  },
+  {
+    "country": "Senegal",
+    "2.2_requirement": "'14/20",
+    "2.1_requirement": "'16/20",
+    "1st_requirement": "'18/20"
+  },
+  {
+    "country": "Singapore",
+    "2.2_requirement": "50%",
+    "2.1_requirement": "60%",
+    "1st_requirement": "70%"
+  },
+  {
+    "country": "Somalia",
+    "2.2_requirement": "The award of any of the following: Degrees from Somalia are not acceptable for entry to any level of...",
+    "2.1_requirement": "The award of any of the following: Degrees from Somalia are not acceptable for entry to any level of...",
+    "1st_requirement": "The award of any of the following: Degrees from Somalia are not acceptable for entry to any level of..."
+  },
+  {
+    "country": "Spain",
+    "2.2_requirement": "N/A",
+    "2.1_requirement": "50%",
+    "1st_requirement": "50%"
+  },
+  {
+    "country": "Swaziland",
+    "2.2_requirement": "60%",
+    "2.1_requirement": "70%",
+    "1st_requirement": "80%"
+  },
+  {
+    "country": "Syria",
+    "2.2_requirement": "70%",
+    "2.1_requirement": "0%",
+    "1st_requirement": "0%"
+  },
+  {
+    "country": "Taiwan",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Thailand",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Turkey",
+    "2.2_requirement": "'2.7/4.0",
+    "2.1_requirement": "'3.0/4.0",
+    "1st_requirement": "'3.3/4.0"
+  },
+  {
+    "country": "Tajikistan",
+    "2.2_requirement": "'4/5",
+    "2.1_requirement": "'4.5/5",
+    "1st_requirement": "'5/5"
+  },
+  {
+    "country": "Trinidad and Tobago",
+    "2.2_requirement": "2.2",
+    "2.1_requirement": "2.1",
+    "1st_requirement": "1.0"
+  },
+  {
+    "country": "Turkmenistan",
+    "2.2_requirement": "'4.0/5.0",
+    "2.1_requirement": "'4.5/5.0",
+    "1st_requirement": "'5.0/5.0"
+  },
+  {
+    "country": "Tanzania",
+    "2.2_requirement": "2.2",
+    "2.1_requirement": "2.1",
+    "1st_requirement": "1.0"
+  },
+  {
+    "country": "Tunisia",
+    "2.2_requirement": "'14/20",
+    "2.1_requirement": "'16/20",
+    "1st_requirement": "'18/20"
+  },
+  {
+    "country": "Uganda",
+    "2.2_requirement": "'3.0/5.0",
+    "2.1_requirement": "'4.0/5.0",
+    "1st_requirement": "'4.5/5.0"
+  },
+  {
+    "country": "United States of America",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Ukraine",
+    "2.2_requirement": "80%",
+    "2.1_requirement": "85%",
+    "1st_requirement": "90%"
+  },
+  {
+    "country": "Uruguay",
+    "2.2_requirement": "'9/12",
+    "2.1_requirement": "'10/12",
+    "1st_requirement": "'11/12"
+  },
+  {
+    "country": "United Arab Emirates",
+    "2.2_requirement": "'3.0/4.0",
+    "2.1_requirement": "'3.3/4.0",
+    "1st_requirement": "'3.7/4.0"
+  },
+  {
+    "country": "Uzbekistan",
+    "2.2_requirement": "71%",
+    "2.1_requirement": "86%",
+    "1st_requirement": "95%"
+  },
+  {
+    "country": "Venezuela",
+    "2.2_requirement": "71%",
+    "2.1_requirement": "81%",
+    "1st_requirement": "91%"
+  },
+  {
+    "country": "Vietnam",
+    "2.2_requirement": "'7.0/10",
+    "2.1_requirement": "'8.0/10",
+    "1st_requirement": "90%"
+  },
+  {
+    "country": "Zambia",
+    "2.2_requirement": "The award of any of the following from a recognised institution: Masters degree with an overall clas...",
+    "2.1_requirement": "The award of any of the following from a recognised institution: Masters degree with an overall clas...",
+    "1st_requirement": "The award of any of the following from a recognised institution: Masters degree with an overall clas..."
+  },
+  {
+    "country": "Zimbabwe",
+    "2.2_requirement": "The award of any of the following: Bachelors (Honours) degree from the University of Zimbabwe or Nat...",
+    "2.1_requirement": "The award of any of the following: Bachelors (Honours) degree from the University of Zimbabwe or Nat...",
+    "1st_requirement": "1.0"
+  }
+]

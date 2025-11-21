@@ -1,4 +1,6 @@
-﻿using CsvHelper.Configuration.Attributes;
+﻿// ./DataModels.cs
+
+using CsvHelper.Configuration.Attributes;
 
 namespace ADMerger
 {
@@ -6,29 +8,22 @@ namespace ADMerger
     {
         [Name("Received on")]
         public string ReceivedOn { get; set; }
-        
+       
         [Name("Student No.")]
         public string StudentNo { get; set; }
-        
+       
         [Name("Name")]
         public string Name { get; set; }
     }
-    
+   
     public class ApplicationRecord
     {
         [Name("Applicant ID")]
         public string ApplicantID { get; set; }
-        
-        [Name("Programme")]
+       
         public string Programme { get; set; }
-        
-        [Name("Forename")]
         public string Forename { get; set; }
-        
-        [Name("Surname")]
         public string Surname { get; set; }
-        
-        [Name("Gender")]
         public string Gender { get; set; }
         
         [Name("Date of Birth")]
@@ -52,16 +47,17 @@ namespace ADMerger
         [Name("Country of study")]
         public string CountryOfStudy { get; set; }
         
-        [Name("Overall grade/GPA")]
+        [Name("Overall  grade/GPA")]
         public string OverallGradeGPA { get; set; }
-        
+       
         [Name("Equivalency note")]
         public string EquivalencyNote { get; set; }
     }
-    
+   
     public class OutputRecord
     {
         public string ReceivedDate { get; set; }
+        public string DueDate { get; set; } // <--- FINALIZED PROPERTY
         public string StudentNo { get; set; }
         public string Programme { get; set; }
         public string Forename { get; set; }
@@ -74,6 +70,7 @@ namespace ADMerger
         public string QualificationName { get; set; }
         public string DegreeSubject { get; set; }
         public string InstitutionName { get; set; }
+        public string THERanking { get; set; }  // NEW PROPERTY
         public string OverallGradeGPA { get; set; }
         public string EquivalencyNote { get; set; }
         public string UKGrade { get; set; }

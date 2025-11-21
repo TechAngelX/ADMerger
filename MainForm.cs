@@ -24,11 +24,94 @@ namespace ADMerger
         private ModernFilePanel doc2Panel;
         private ModernButton processButton;
         private ModernButton exitButton;
+        private ModernButton openOutputButton;
         private RichTextBox statusBox;
+        
+        private Dictionary<string, DegreeEquivalency> degreeEquivalencies = new Dictionary<string, DegreeEquivalency>();
+        private string lastOutputPath = "";
         
         public MainForm()
         {
             InitializeComponent();
+            LoadDegreeEquivalencies();
+        }
+        
+        private void LoadDegreeEquivalencies()
+        {
+            try
+            {
+                StreamReader reader = null;
+                
+                // Try to load from file system first (for dev/debug)
+                string csvPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "ucl_degree_equivalencies_FINAL.csv");
+                
+                if (File.Exists(csvPath))
+                {
+                    // Dev mode: load from file
+                    reader = new StreamReader(csvPath);
+                    UpdateStatus("Loading equivalencies from data folder (dev mode)...");
+                }
+                else
+                {
+                    // Release mode: load from embedded resource
+                    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    var resourceName = "ADMerger.data.ucl_degree_equivalencies_FINAL.csv";
+                    var stream = assembly.GetManifestResourceStream(resourceName);
+                    
+                    if (stream == null)
+                    {
+                        UpdateStatus("Warning: Embedded equivalencies data not found. UK grade mapping will use basic rules only.");
+                        return;
+                    }
+                    
+                    reader = new StreamReader(stream);
+                    UpdateStatus("Loading equivalencies from embedded resource (release mode)...");
+                }
+                
+                using (reader)
+                {
+                    var config = new CsvConfiguration(CultureInfo.InvariantCulture);
+                    config.HeaderValidated = null;
+                    config.MissingFieldFound = null;
+                    config.Delimiter = "\t";
+                    
+                    using var csv = new CsvReader(reader, config);
+                    
+                    csv.Read();
+                    csv.ReadHeader();
+                    
+                    while (csv.Read())
+                    {
+                        try
+                        {
+                            string country = csv.GetField(0)?.Trim().TrimStart('\'');
+                            string third = csv.GetField(1)?.Trim().TrimStart('\'').TrimStart('<');
+                            string secondLower = csv.GetField(2)?.Trim().TrimStart('\'');
+                            string secondUpper = csv.GetField(3)?.Trim().TrimStart('\'');
+                            string first = csv.GetField(4)?.Trim().TrimStart('\'');
+                            
+                            if (!string.IsNullOrWhiteSpace(country))
+                            {
+                                degreeEquivalencies[country] = new DegreeEquivalency
+                                {
+                                    Country = country,
+                                    Third = third,
+                                    SecondLower = secondLower,
+                                    SecondUpper = secondUpper,
+                                    First = first
+                                };
+                            }
+                        }
+                        catch { }
+                    }
+                    
+                    UpdateStatus($"Loaded {degreeEquivalencies.Count} country equivalencies");
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"Warning: Could not load equivalencies: {ex.Message}");
+            }
         }
         
         private void InitializeComponent()
@@ -88,8 +171,13 @@ namespace ADMerger
             doc1Label.AutoSize = true;
             this.Controls.Add(doc1Label);
 
-            doc1Panel = new ModernFilePanel("Click to select Document 1 (CSV)", 30, yPos + 30);
+            doc1Panel = new ModernFilePanel("Click or drag CSV file for Document 1", 30, yPos + 30);
             doc1Panel.Click += (s, e) => SelectDocument1();
+            doc1Panel.SetDropHandler(filePath => 
+            {
+                document1Path = filePath;
+                LoadInTrayData();
+            });
             this.Controls.Add(doc1Panel);
 
             yPos += 140;
@@ -102,8 +190,18 @@ namespace ADMerger
             doc2Label.AutoSize = true;
             this.Controls.Add(doc2Label);
 
-            doc2Panel = new ModernFilePanel("Click to select Document 2 (CSV)", 30, yPos + 30);
+            doc2Panel = new ModernFilePanel("Click or drag CSV file for Document 2", 30, yPos + 30);
             doc2Panel.Click += (s, e) => SelectDocument2();
+            doc2Panel.SetDropHandler(filePath => 
+            {
+                if (document1Data.Count == 0)
+                {
+                    MessageBox.Show("Please load Document 1 first.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                document2Path = filePath;
+                LoadApplicationReports();
+            });
             doc2Panel.Enabled = false;
             this.Controls.Add(doc2Panel);
 
@@ -115,6 +213,7 @@ namespace ADMerger
             processButton.Size = new Size(180, 45);
             processButton.Enabled = false;
             processButton.Click += ProcessFiles_Click;
+            processButton.SetRounded();
             this.Controls.Add(processButton);
 
             yPos += 65;
@@ -135,7 +234,7 @@ namespace ADMerger
             statusBox.BorderStyle = BorderStyle.FixedSingle;
             statusBox.Font = new Font("Consolas", 9F);
             statusBox.ForeColor = ColorTranslator.FromHtml("#475569");
-            statusBox.Text = "Ready. Click to select Document 1...";
+            statusBox.Text = "Ready. Click or drag CSV file for Document 1...";
             this.Controls.Add(statusBox);
 
             yPos += 135;
@@ -147,6 +246,14 @@ namespace ADMerger
             exitButton.Click += (s, e) => Application.Exit();
             exitButton.SetSecondary();
             this.Controls.Add(exitButton);
+
+            openOutputButton = new ModernButton();
+            openOutputButton.Text = "Open Output Folder";
+            openOutputButton.Location = new Point(160, yPos);
+            openOutputButton.Size = new Size(180, 40);
+            openOutputButton.Enabled = false;
+            openOutputButton.Click += OpenOutputFolder_Click;
+            this.Controls.Add(openOutputButton);
 
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -193,7 +300,7 @@ namespace ADMerger
                 UpdateStatus($"Document 1 loaded: {document1Data.Count} new applicants");
                 
                 doc2Panel.Enabled = true;
-                doc2Panel.UpdateText("Click to select Document 2 (CSV)");
+                doc2Panel.UpdateText("Click or drag CSV file for Document 2");
             }
             catch (Exception ex)
             {
@@ -249,17 +356,33 @@ namespace ADMerger
         {
             try
             {
-                processButton.Enabled = false;
-                UpdateStatus("\nProcessing and cross-referencing data...");
+                // Ask user where to save output files
+                using (var folderDialog = new FolderBrowserDialog())
+                {
+                    folderDialog.Description = "Select folder to save output CSV files";
+                    folderDialog.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    
+                    if (folderDialog.ShowDialog() != DialogResult.OK)
+                    {
+                        UpdateStatus("Processing cancelled by user.");
+                        return;
+                    }
+                    
+                    processButton.Enabled = false;
+                    UpdateStatus("\nProcessing and cross-referencing data...");
 
-                var results = CrossReferenceData();
-                var outputPath = GenerateOutputFile(results);
-                
-                UpdateStatus($"\nSUCCESS! Matched {results.Count}/{document1Data.Count} applicants");
-                UpdateStatus($"Output files created:\n{outputPath}");
-                
-                MessageBox.Show($"Processing complete!\n\nMatched {results.Count} out of {document1Data.Count} new applicants.\n\nOutput files saved to:\n{outputPath}", 
-                    "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    var results = CrossReferenceData();
+                    var outputPath = GenerateOutputFile(results, folderDialog.SelectedPath);
+                    
+                    lastOutputPath = outputPath.Split('\n')[0];
+                    openOutputButton.Enabled = true;
+                    
+                    UpdateStatus($"\nSUCCESS! Matched {results.Count}/{document1Data.Count} applicants");
+                    UpdateStatus($"Output files created:\n{outputPath}");
+                    
+                    MessageBox.Show($"Processing complete!\n\nMatched {results.Count} out of {document1Data.Count} new applicants.\n\nOutput files saved to:\n{outputPath}", 
+                        "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             catch (Exception ex)
             {
@@ -272,11 +395,257 @@ namespace ADMerger
             }
         }
 
-        private string DetermineUKClassification(string equivalencyNote, string countryOfStudy)
+        private void OpenOutputFolder_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(countryOfStudy) || !countryOfStudy.ToLower().Contains("united kingdom"))
+            if (!string.IsNullOrEmpty(lastOutputPath))
+            {
+                try
+                {
+                    string folder = Path.GetDirectoryName(lastOutputPath);
+                    System.Diagnostics.Process.Start("explorer.exe", folder);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Could not open folder: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private double? ParseGradeValue(string gradeStr)
+        {
+            if (string.IsNullOrWhiteSpace(gradeStr)) return null;
+            
+            gradeStr = gradeStr.TrimStart('\'').Trim();
+            
+            bool hadPercent = gradeStr.Contains("%");
+            gradeStr = gradeStr.Replace("%", "").Trim();
+            
+            if (gradeStr.Contains("/"))
+            {
+                var parts = gradeStr.Split('/');
+                if (parts.Length == 2 && 
+                    double.TryParse(parts[0].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double numerator) &&
+                    double.TryParse(parts[1].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double denominator) &&
+                    denominator != 0)
+                {
+                    if (denominator == 100.0)
+                    {
+                        return numerator;
+                    }
+                    else
+                    {
+                        return (numerator / denominator) * 100.0;
+                    }
+                }
+            }
+            
+            if (double.TryParse(gradeStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
+            {
+                return result;
+            }
+            
+            return null;
+        }
+
+        private string ParseUKGradeText(string gradeText)
+        {
+            if (string.IsNullOrWhiteSpace(gradeText)) return "??";
+            
+            string lower = gradeText.ToLower();
+            
+            if (lower.Contains("first") || lower.Contains("1st") || lower == "1.0" || lower == "1")
+                return "1.0";
+            
+            if (lower.Contains("2.1") || lower.Contains("2:1") || lower.Contains("upper second"))
+                return "2.1";
+            
+            if (lower.Contains("2.2") || lower.Contains("2:2") || lower.Contains("lower second"))
+                return "2.2";
+            
+            if (lower.Contains("third") || lower.Contains("3rd") || lower == "3.0" || lower == "3")
+                return "3.0";
+            
+            return "??";
+        }
+
+        private string FormatDate(string dateStr)
+        {
+            if (string.IsNullOrWhiteSpace(dateStr)) return "";
+            
+            string[] formats = {
+                "dd-MMM-yy", "dd-MMM-yyyy",
+                "dd/MM/yy", "dd/MM/yyyy",
+                "yyyy-MM-dd", "MM/dd/yyyy"
+            };
+            
+            foreach (var format in formats)
+            {
+                if (DateTime.TryParseExact(dateStr, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
+                {
+                    return date.ToString("dd/MM/yy");
+                }
+            }
+            
+            if (DateTime.TryParse(dateStr, out DateTime generalDate))
+            {
+                return generalDate.ToString("dd/MM/yy");
+            }
+            
+            return dateStr;
+        }
+
+        private string CalculateDueDate(string receivedDateStr)
+        {
+            if (string.IsNullOrWhiteSpace(receivedDateStr)) return "";
+            
+            string[] formats = {
+                "dd-MMM-yy", "dd-MMM-yyyy",
+                "dd/MM/yy", "dd/MM/yyyy",
+                "yyyy-MM-dd", "MM/dd/yyyy"
+            };
+            
+            foreach (var format in formats)
+            {
+                if (DateTime.TryParseExact(receivedDateStr, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
+                {
+                    return date.AddDays(42).ToString("dd/MM/yy");
+                }
+            }
+            
+            if (DateTime.TryParse(receivedDateStr, out DateTime generalDate))
+            {
+                return generalDate.AddDays(42).ToString("dd/MM/yy");
+            }
+            
+            return "";
+        }
+
+        private Dictionary<string, double> ParseThresholdsFromEquivalencyNote(string equivalencyNote)
+        {
+            var thresholds = new Dictionary<string, double>();
+            
+            var regex = new System.Text.RegularExpressions.Regex(@"(2\.2|2\.1|1st):\s*Bachelors\s*@\s*([0-9.]+)%");
+            var matches = regex.Matches(equivalencyNote);
+            
+            foreach (System.Text.RegularExpressions.Match match in matches)
+            {
+                string grade = match.Groups[1].Value;
+                if (double.TryParse(match.Groups[2].Value, out double threshold))
+                {
+                    thresholds[grade] = threshold;
+                }
+            }
+            
+            return thresholds;
+        }
+
+        private string DetermineUKClassification(string overallGradeGPA, string equivalencyNote, string countryOfStudy)
+        {
+            if (string.IsNullOrWhiteSpace(countryOfStudy))
                 return "??";
             
+            if (countryOfStudy.ToLower().Contains("united kingdom"))
+            {
+                if (!string.IsNullOrWhiteSpace(overallGradeGPA))
+                {
+                    string grade = ParseUKGradeText(overallGradeGPA);
+                    if (grade != "??") return grade;
+                }
+                
+                return DetermineUKClassificationFromNote(equivalencyNote);
+            }
+            
+            if (!string.IsNullOrWhiteSpace(equivalencyNote))
+            {
+                var noteLower = equivalencyNote.ToLower();
+                if (noteLower.Contains("liverpool") || noteLower.Contains("reading"))
+                {
+                    var percentMatches = System.Text.RegularExpressions.Regex.Matches(equivalencyNote, @"(\d+(?:\.\d+)?)%");
+                    double bestGrade = 0;
+                    
+                    foreach (System.Text.RegularExpressions.Match match in percentMatches)
+                    {
+                        if (double.TryParse(match.Groups[1].Value, out double grade))
+                        {
+                            if (grade > bestGrade && grade <= 100 && grade >= 30)
+                            {
+                                bestGrade = grade;
+                            }
+                        }
+                    }
+                    
+                    if (bestGrade > 0)
+                    {
+                        if (bestGrade >= 70) return "1.0";
+                        if (bestGrade >= 60) return "2.1";
+                        if (bestGrade >= 50) return "2.2";
+                        if (bestGrade >= 40) return "3.0";
+                    }
+                }
+            }
+            
+            double? studentGrade = ParseGradeValue(overallGradeGPA);
+            
+            if (studentGrade == null && !string.IsNullOrWhiteSpace(equivalencyNote))
+            {
+                var gradeMatches = System.Text.RegularExpressions.Regex.Matches(
+                    equivalencyNote, 
+                    @"(?:grade of|average of|GPA of)\s*([0-9.]+(?:/[0-9.]+)?%?)"
+                );
+                
+                if (gradeMatches.Count > 0)
+                {
+                    string gradeText = gradeMatches[gradeMatches.Count - 1].Groups[1].Value;
+                    studentGrade = ParseGradeValue(gradeText);
+                }
+            }
+            
+            if (studentGrade != null && !string.IsNullOrWhiteSpace(equivalencyNote))
+            {
+                var thresholdsFromNote = ParseThresholdsFromEquivalencyNote(equivalencyNote);
+                
+                if (thresholdsFromNote.Count > 0)
+                {
+                    if (thresholdsFromNote.ContainsKey("1st") && studentGrade >= thresholdsFromNote["1st"])
+                        return "1.0";
+                    
+                    if (thresholdsFromNote.ContainsKey("2.1") && studentGrade >= thresholdsFromNote["2.1"])
+                        return "2.1";
+                    
+                    if (thresholdsFromNote.ContainsKey("2.2") && studentGrade >= thresholdsFromNote["2.2"])
+                        return "2.2";
+                    
+                    return "3.0";
+                }
+            }
+            
+            string cleanCountry = countryOfStudy.Trim();
+            
+            if (studentGrade != null && degreeEquivalencies.ContainsKey(cleanCountry))
+            {
+                var equiv = degreeEquivalencies[cleanCountry];
+                
+                double? firstThreshold = ParseGradeValue(equiv.First);
+                double? upperSecondThreshold = ParseGradeValue(equiv.SecondUpper);
+                double? lowerSecondThreshold = ParseGradeValue(equiv.SecondLower);
+                
+                if (firstThreshold != null && studentGrade >= firstThreshold)
+                    return "1.0";
+                
+                if (upperSecondThreshold != null && studentGrade >= upperSecondThreshold)
+                    return "2.1";
+                
+                if (lowerSecondThreshold != null && studentGrade >= lowerSecondThreshold)
+                    return "2.2";
+                
+                return "3.0";
+            }
+            
+            return DetermineUKClassificationFromNote(equivalencyNote);
+        }
+
+        private string DetermineUKClassificationFromNote(string equivalencyNote)
+        {
             if (string.IsNullOrWhiteSpace(equivalencyNote))
                 return "??";
             
@@ -304,10 +673,10 @@ namespace ADMerger
                 if (bestGrade >= 40) return "3.0";
             }
             
-            if (note.Contains("overall classification was 1st") || note.Contains("hons 1st")) return "1.0";
-            if (note.Contains("overall classification was 2.1") || note.Contains("classification was 2.1")) return "2.1";
-            if (note.Contains("overall classification was 2.2") || note.Contains("classification was 2.2")) return "2.2";
-            if (note.Contains("overall classification was 3rd") || note.Contains("classification was 3rd")) return "3.0";
+            if (note.Contains("overall classification was 1st") || note.Contains("hons 1st") || note.Contains("first class")) return "1.0";
+            if (note.Contains("overall classification was 2.1") || note.Contains("classification was 2.1") || note.Contains("upper second")) return "2.1";
+            if (note.Contains("overall classification was 2.2") || note.Contains("classification was 2.2") || note.Contains("lower second")) return "2.2";
+            if (note.Contains("overall classification was 3rd") || note.Contains("classification was 3rd") || note.Contains("third class")) return "3.0";
             
             return "??";
         }
@@ -344,26 +713,26 @@ namespace ADMerger
                 if (match != null)
                 {
                     var programmeCode = programmeMapping.ContainsKey(match.Programme) ? programmeMapping[match.Programme] : match.Programme;
-                    var ukGrade = DetermineUKClassification(match.EquivalencyNote, match.CountryOfStudy);
+                    var ukGrade = DetermineUKClassification(match.OverallGradeGPA, match.EquivalencyNote, match.CountryOfStudy);
                     
                     results.Add(new OutputRecord
                     {
-                        ReceivedDate = inTrayRecord.ReceivedOn,
+                        ReceivedDate = FormatDate(inTrayRecord.ReceivedOn),
+                        DueDate = CalculateDueDate(inTrayRecord.ReceivedOn),
                         StudentNo = inTrayRecord.StudentNo,
                         Programme = programmeCode,
                         Forename = match.Forename,
                         Surname = match.Surname,
                         Gender = match.Gender,
-                        DateOfBirth = match.DateOfBirth,
+                        DateOfBirth = FormatDate(match.DateOfBirth),
                         FeeStatus = match.FeeStatus,
                         CountryOfStudy = match.CountryOfStudy,
                         CountryOfNationality = match.CountryOfNationality,
                         QualificationName = match.QualificationName,
                         DegreeSubject = match.DegreeSubject,
                         InstitutionName = match.InstitutionName,
-                        EquivalencyNote = match.EquivalencyNote,
                         OverallGradeGPA = match.OverallGradeGPA,
-
+                        EquivalencyNote = match.EquivalencyNote,
                         UKGrade = ukGrade
                     });
                 }
@@ -372,15 +741,15 @@ namespace ADMerger
             return results;
         }
 
-        private string GenerateOutputFile(List<OutputRecord> data)
+        private string GenerateOutputFile(List<OutputRecord> data, string outputFolderPath)
         {
             var programmeGroups = data.GroupBy(record => record.Programme).ToList();
             var outputPaths = new List<string>();
             
-            // Define exact column order
             var columnOrder = new List<string>
             {
                 "ReceivedDate",
+                "DueDate",
                 "StudentNo",
                 "Programme",
                 "Forename",
@@ -393,8 +762,8 @@ namespace ADMerger
                 "DegreeSubject",
                 "InstitutionName",
                 "CountryOfStudy",
-                "OverallGradeGPA",
                 "EquivalencyNote",
+                "OverallGradeGPA",
                 "UKGrade",
                 "Decision",
                 "AT",
@@ -409,15 +778,13 @@ namespace ADMerger
                 var records = group.ToList();
                 
                 var outputPath = Path.Combine(
-                    Path.GetDirectoryName(document1Path), 
-                    programme + "_LatestApplicants_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv");
+                    outputFolderPath, 
+                    programme + "_Latest_" + DateTime.Now.ToString("dd_MMM_yyyy_HHmm") + ".csv");
                 
                 using var writer = new StreamWriter(outputPath);
                 
-                // Write header
                 writer.WriteLine(string.Join(",", columnOrder));
                 
-                // Write data rows
                 foreach (var record in records)
                 {
                     var values = new List<string>();
@@ -427,6 +794,7 @@ namespace ADMerger
                         string value = column switch
                         {
                             "ReceivedDate" => record.ReceivedDate ?? "",
+                            "DueDate" => record.DueDate ?? "",
                             "StudentNo" => record.StudentNo ?? "",
                             "Programme" => record.Programme ?? "",
                             "Forename" => record.Forename ?? "",
@@ -442,10 +810,9 @@ namespace ADMerger
                             "EquivalencyNote" => record.EquivalencyNote ?? "",
                             "OverallGradeGPA" => record.OverallGradeGPA ?? "",
                             "UKGrade" => record.UKGrade ?? "",
-                            _ => "" // Empty for Decision, AT, Note, Progr. Adm, Comment
+                            _ => ""
                         };
                         
-                        // Escape commas and quotes in CSV
                         if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
                         {
                             value = "\"" + value.Replace("\"", "\"\"") + "\"";
@@ -464,11 +831,21 @@ namespace ADMerger
         }
     }
 
+    public class DegreeEquivalency
+    {
+        public string Country { get; set; }
+        public string Third { get; set; }
+        public string SecondLower { get; set; }
+        public string SecondUpper { get; set; }
+        public string First { get; set; }
+    }
+
     public class ModernFilePanel : Panel
     {
         private Label label;
         private string originalText;
         private bool fileLoaded = false;
+        private Action<string> onFileDropped;
 
         public ModernFilePanel(string text, int xPos, int yPos)
         {
@@ -478,6 +855,7 @@ namespace ADMerger
             this.BackColor = ColorTranslator.FromHtml("#F8FAFC");
             this.BorderStyle = BorderStyle.None;
             this.Cursor = Cursors.Hand;
+            this.AllowDrop = true;
             
             this.Paint += (s, e) =>
             {
@@ -497,11 +875,21 @@ namespace ADMerger
             label.Cursor = Cursors.Hand;
             label.BackColor = Color.Transparent;
             label.Click += (s, e) => this.OnClick(e);
+            
+            label.MouseDown += (s, e) => this.OnMouseDown(e);
+            label.MouseMove += (s, e) => this.OnMouseMove(e);
+            label.MouseUp += (s, e) => this.OnMouseUp(e);
+            
             this.Controls.Add(label);
+
+            this.DragEnter += ModernFilePanel_DragEnter;
+            this.DragDrop += ModernFilePanel_DragDrop;
+            this.DragLeave += ModernFilePanel_DragLeave;
+            this.DragOver += ModernFilePanel_DragOver;
 
             this.MouseEnter += (s, e) =>
             {
-                if (this.Enabled)
+                if (this.Enabled && !fileLoaded)
                 {
                     this.BackColor = ColorTranslator.FromHtml("#DBEAFE");
                     this.Invalidate();
@@ -515,6 +903,78 @@ namespace ADMerger
                     this.Invalidate();
                 }
             };
+        }
+
+        private void ModernFilePanel_DragOver(object sender, DragEventArgs e)
+        {
+            if (!this.Enabled) return;
+            
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length == 1 && files[0].EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.Effect = DragDropEffects.Copy;
+                }
+                else
+                {
+                    e.Effect = DragDropEffects.None;
+                }
+            }
+        }
+
+        private void ModernFilePanel_DragEnter(object sender, DragEventArgs e)
+        {
+            if (!this.Enabled) return;
+            
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length == 1 && files[0].EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.Effect = DragDropEffects.Copy;
+                    this.BackColor = ColorTranslator.FromHtml("#BFDBFE");
+                    this.Invalidate();
+                }
+                else
+                {
+                    e.Effect = DragDropEffects.None;
+                }
+            }
+        }
+
+        private void ModernFilePanel_DragLeave(object sender, EventArgs e)
+        {
+            if (!fileLoaded && this.Enabled)
+            {
+                this.BackColor = ColorTranslator.FromHtml("#F8FAFC");
+                this.Invalidate();
+            }
+        }
+
+        private void ModernFilePanel_DragDrop(object sender, DragEventArgs e)
+        {
+            if (!this.Enabled) return;
+            
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length == 1 && files[0].EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                {
+                    onFileDropped?.Invoke(files[0]);
+                }
+            }
+            
+            if (!fileLoaded && this.Enabled)
+            {
+                this.BackColor = ColorTranslator.FromHtml("#F8FAFC");
+                this.Invalidate();
+            }
+        }
+
+        public void SetDropHandler(Action<string> handler)
+        {
+            this.onFileDropped = handler;
         }
 
         public void UpdateText(string text)
@@ -558,6 +1018,7 @@ namespace ADMerger
     public class ModernButton : Button
     {
         private bool isSecondary = false;
+        private bool isRounded = false;
 
         public ModernButton()
         {
@@ -571,6 +1032,49 @@ namespace ADMerger
         {
             isSecondary = true;
             UpdateStyle();
+        }
+
+        public void SetRounded()
+        {
+            isRounded = true;
+            this.Paint += ModernButton_Paint;
+        }
+
+        private void ModernButton_Paint(object sender, PaintEventArgs e)
+        {
+            if (isRounded)
+            {
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                
+                var rect = new Rectangle(0, 0, this.Width - 1, this.Height - 1);
+                var path = GetRoundedRectanglePath(rect, 10);
+                
+                this.Region = new Region(path);
+                
+                using (var brush = new SolidBrush(this.BackColor))
+                {
+                    e.Graphics.FillPath(brush, path);
+                }
+                
+                using (var pen = new Pen(this.BackColor, 2))
+                {
+                    e.Graphics.DrawPath(pen, path);
+                }
+                
+                TextRenderer.DrawText(e.Graphics, this.Text, this.Font, rect, this.ForeColor, 
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
+        }
+
+        private System.Drawing.Drawing2D.GraphicsPath GetRoundedRectanglePath(Rectangle rect, int radius)
+        {
+            var path = new System.Drawing.Drawing2D.GraphicsPath();
+            path.AddArc(rect.X, rect.Y, radius, radius, 180, 90);
+            path.AddArc(rect.Right - radius, rect.Y, radius, radius, 270, 90);
+            path.AddArc(rect.Right - radius, rect.Bottom - radius, radius, radius, 0, 90);
+            path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90);
+            path.CloseFigure();
+            return path;
         }
 
         private void UpdateStyle()

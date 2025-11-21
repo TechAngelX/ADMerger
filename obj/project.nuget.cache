@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "dgSpecHash": "XQ/Us5ASnJ4=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Ricki\\Documents\\LOCALDEV-PC\\ADMerger\\ADMerger.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Ricki\\.nuget\\packages\\csvhelper\\33.1.0\\csvhelper.33.1.0.nupkg.sha512",
+    "C:\\Users\\Ricki\\.nuget\\packages\\microsoft.net.illink.tasks\\9.0.9\\microsoft.net.illink.tasks.9.0.9.nupkg.sha512",
+    "C:\\Users\\Ricki\\.nuget\\packages\\microsoft.netcore.app.ref\\9.0.9\\microsoft.netcore.app.ref.9.0.9.nupkg.sha512",
+    "C:\\Users\\Ricki\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\9.0.9\\microsoft.netcore.app.runtime.win-x64.9.0.9.nupkg.sha512",
+    "C:\\Users\\Ricki\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\9.0.9\\microsoft.windowsdesktop.app.ref.9.0.9.nupkg.sha512",
+    "C:\\Users\\Ricki\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\9.0.9\\microsoft.windowsdesktop.app.runtime.win-x64.9.0.9.nupkg.sha512",
+    "C:\\Users\\Ricki\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\9.0.9\\microsoft.aspnetcore.app.ref.9.0.9.nupkg.sha512",
+    "C:\\Users\\Ricki\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\9.0.9\\microsoft.aspnetcore.app.runtime.win-x64.9.0.9.nupkg.sha512",
+    "C:\\Users\\Ricki\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\9.0.9\\microsoft.netcore.app.host.win-x64.9.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}
