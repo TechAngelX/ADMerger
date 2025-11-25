@@ -1,186 +1,221 @@
-﻿// ./Services/RankingService.cs
+﻿// Services/RankingService.cs
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using OfficeOpenXml;
 
 namespace ADMerger.Services
 {
-    public class RankingService
+    public class RankingService : IRankingService
     {
-        private readonly Dictionary<string, string> theRankings = new Dictionary<string, string>();
-        private readonly List<string> theInstitutionNames = new List<string>();
-
-        public int LoadedCount => theRankings.Count;
-
-        public void LoadTHERankings()
+        private readonly Dictionary<string, string> _rankings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly List<string> _institutionNames = new List<string>();
+        private readonly Dictionary<string, string> _institutionMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly IInstitutionMatchingService _matchingService;
+        
+        public int Count => _rankings.Count;
+        
+        public RankingService(IInstitutionMatchingService matchingService)
         {
+            _matchingService = matchingService ?? throw new ArgumentNullException(nameof(matchingService));
+        }
+        
+        public void LoadRankings()
+        {
+            LoadInstitutionMappings();
+            
             try
             {
+                Stream excelStream = null;
                 string excelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "THE Ranking 2026.xlsx");
                 
-                if (!File.Exists(excelPath))
-                    return;
-                
-                using var package = new ExcelPackage(new FileInfo(excelPath));
-                var worksheet = package.Workbook.Worksheets[0];
-                
-                if (worksheet.Dimension == null)
-                    return;
-                
-                for (int row = 2; row <= worksheet.Dimension.Rows; row++)
+                if (File.Exists(excelPath))
                 {
-                    var rankCell = worksheet.Cells[row, 1].Value;
-                    var nameCell = worksheet.Cells[row, 2].Value;
+                    excelStream = File.OpenRead(excelPath);
+                }
+                else
+                {
+                    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    var resourceName = "ADMerger.data.THE_Ranking_2026.xlsx";
+                    excelStream = assembly.GetManifestResourceStream(resourceName);
                     
-                    if (rankCell != null && nameCell != null)
+                    if (excelStream == null)
+                        throw new FileNotFoundException("THE Rankings file not found as file or embedded resource.");
+                }
+                
+                using (excelStream)
+                using (var package = new ExcelPackage(excelStream))
+                {
+                    var worksheet = package.Workbook.Worksheets[0];
+                    
+                    if (worksheet.Dimension == null)
+                        throw new InvalidOperationException("THE Rankings sheet is empty.");
+                    
+                    int totalRows = worksheet.Dimension.Rows;
+                    int loadedCount = 0;
+                    
+                    for (int row = 2; row <= totalRows; row++)
                     {
-                        string rank = rankCell.ToString().Trim();
-                        string institutionName = nameCell.ToString().Trim();
+                        var rankCell = worksheet.Cells[row, 1].Value;
+                        var nameCell = worksheet.Cells[row, 2].Value;
                         
-                        if (!string.IsNullOrWhiteSpace(institutionName))
+                        if (rankCell != null && nameCell != null)
                         {
-                            theRankings[institutionName] = rank;
-                            theInstitutionNames.Add(institutionName);
+                            string rank = rankCell.ToString().Trim();
+                            string institutionName = nameCell.ToString().Trim();
+                            
+                            if (!string.IsNullOrWhiteSpace(institutionName))
+                            {
+                                _rankings[institutionName] = rank;
+                                _institutionNames.Add(institutionName);
+                                loadedCount++;
+                            }
                         }
                     }
+                    
+                    if (loadedCount == 0)
+                        throw new InvalidOperationException($"No data loaded from Excel. Total rows: {totalRows}");
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Could not load THE Rankings: {ex.Message}", ex);
+            }
         }
-
-        public string GetTHERanking(string institutionName)
+        
+        public string GetRanking(string institutionName)
         {
             if (string.IsNullOrWhiteSpace(institutionName))
                 return "NR";
             
-            // Exact match first
-            if (theRankings.ContainsKey(institutionName))
-                return theRankings[institutionName];
+            string originalName = institutionName;
+            institutionName = NormalizeAbbreviations(institutionName);
             
-            // Fuzzy match
-            string bestMatch = FindBestMatch(institutionName);
-            
-            return bestMatch != null ? theRankings[bestMatch] : "NR";
-        }
-
-        private string FindBestMatch(string searchName)
-        {
-            if (string.IsNullOrWhiteSpace(searchName))
-                return null;
-            
-            string normalizedSearch = NormalizeInstitutionName(searchName);
-            var searchTerms = ExtractKeyTerms(normalizedSearch);
-            
-            string bestMatch = null;
-            int bestScore = 0;
-            
-            foreach (var candidateName in theInstitutionNames)
+            if (institutionName == "NOT_RANKED")
             {
-                string normalizedCandidate = NormalizeInstitutionName(candidateName);
-                int score = CalculateMatchScore(normalizedSearch, normalizedCandidate, searchTerms);
+                LogToFile($"NOT RANKED: '{originalName}' (marked as not in THE Rankings)");
+                return "NR";
+            }
+            
+            LogToFile($"Original: '{originalName}' | Normalized: '{institutionName}' | InDict: {_rankings.ContainsKey(institutionName)}");
+            
+            if (_rankings.ContainsKey(institutionName))
+            {
+                string rank = CleanRankingText(_rankings[institutionName]);
+                LogToFile($"EXACT MATCH: '{institutionName}' = Rank {rank}");
+                return rank;
+            }
+            
+            string bestMatch = _matchingService.FindBestMatch(institutionName, _institutionNames);
+            
+            if (bestMatch != null)
+            {
+                string rank = CleanRankingText(_rankings[bestMatch]);
+                LogToFile($"FUZZY MATCH: '{institutionName}' -> '{bestMatch}' = Rank {rank}");
+                return rank;
+            }
+            
+            LogToFile($"NO MATCH: '{institutionName}'");
+            return "NR";
+        }
+        
+        private void LogToFile(string message)
+        {
+            try
+            {
+                string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ranking_matches.log");
+                File.AppendAllText(logPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}\n");
+            }
+            catch { }
+        }
+        
+        private string CleanRankingText(string ranking)
+        {
+            if (string.IsNullOrWhiteSpace(ranking))
+                return "NR";
+            
+            byte[] bytes = Encoding.UTF8.GetBytes(ranking);
+            string cleanRanking = Encoding.UTF8.GetString(bytes);
+            
+            cleanRanking = cleanRanking.Replace(char.ConvertFromUtf32(0x2013), "-");
+            cleanRanking = cleanRanking.Replace(char.ConvertFromUtf32(0x2014), "-");
+            
+            if (cleanRanking.Contains("â") || cleanRanking.Contains("€"))
+            {
+                cleanRanking = System.Text.RegularExpressions.Regex.Replace(cleanRanking, @"â€.", "-");
+            }
+            
+            return cleanRanking;
+        }
+        
+        private void LoadInstitutionMappings()
+        {
+            try
+            {
+                string csvPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "institution_mappings.csv");
                 
-                if (score > bestScore && score >= 60)
+                if (!File.Exists(csvPath))
                 {
-                    bestScore = score;
-                    bestMatch = candidateName;
+                    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    var resourceName = "ADMerger.data.institution_mappings.csv";
+                    var stream = assembly.GetManifestResourceStream(resourceName);
+                    
+                    if (stream == null)
+                        return;
+                    
+                    using (var reader = new StreamReader(stream))
+                    {
+                        reader.ReadLine();
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            var parts = line.Split(',');
+                            if (parts.Length >= 2)
+                            {
+                                _institutionMappings[parts[0].Trim()] = parts[1].Trim();
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    using (var reader = new StreamReader(csvPath))
+                    {
+                        reader.ReadLine();
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            var parts = line.Split(',');
+                            if (parts.Length >= 2)
+                            {
+                                _institutionMappings[parts[0].Trim()] = parts[1].Trim();
+                            }
+                        }
+                    }
                 }
             }
-            
-            return bestMatch;
-        }
-
-        private string NormalizeInstitutionName(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return "";
-            
-            name = FixEncodingIssues(name);
-            name = RemoveDiacritics(name);
-            name = name.ToLower();
-            name = name.Replace("university of", "").Replace("the ", "");
-            name = Regex.Replace(name, @"[^\w\s]", " ");
-            name = Regex.Replace(name, @"\s+", " ");
-            
-            return name.Trim();
-        }
-
-        private string FixEncodingIssues(string text)
-        {
-            var replacements = new Dictionary<string, string>
+            catch
             {
-                {"Ã ", "à"}, {"Ã¡", "á"}, {"Ã¢", "â"}, {"Ã£", "ã"}, {"Ã¤", "ä"}, {"Ã¥", "å"},
-                {"Ã¨", "è"}, {"Ã©", "é"}, {"Ãª", "ê"}, {"Ã«", "ë"},
-                {"Ã¬", "ì"}, {"Ã­", "í"}, {"Ã®", "î"}, {"Ã¯", "ï"},
-                {"Ã²", "ò"}, {"Ã³", "ó"}, {"Ã´", "ô"}, {"Ãµ", "õ"}, {"Ã¶", "ö"},
-                {"Ã¹", "ù"}, {"Ãº", "ú"}, {"Ã»", "û"}, {"Ã¼", "ü"},
-                {"Ã±", "ñ"}, {"Ã§", "ç"}
-            };
-            
-            foreach (var pair in replacements)
-                text = text.Replace(pair.Key, pair.Value);
-            
-            return text;
+            }
         }
-
-        private string RemoveDiacritics(string text)
+        
+        private string NormalizeAbbreviations(string institutionName)
         {
-            var normalizedString = text.Normalize(NormalizationForm.FormD);
-            var stringBuilder = new StringBuilder();
-            
-            foreach (var c in normalizedString)
+            if (_institutionMappings.TryGetValue(institutionName, out string mappedName))
             {
-                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
-                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
-                    stringBuilder.Append(c);
+                return mappedName;
             }
             
-            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+            return institutionName;
         }
-
-        private List<string> ExtractKeyTerms(string normalizedName)
+        
+        public IReadOnlyList<string> GetAllInstitutionNames()
         {
-            var commonWords = new HashSet<string> { "of", "the", "and", "in", "at", "for", "on", "a", "an" };
-            
-            return normalizedName
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Where(word => word.Length > 2 && !commonWords.Contains(word))
-                .ToList();
-        }
-
-        private int CalculateMatchScore(string search, string candidate, List<string> searchTerms)
-        {
-            int score = 0;
-            
-            if (search == candidate) return 100;
-            if (candidate.Contains(search)) score += 80;
-            if (search.Contains(candidate)) score += 70;
-            
-            int matchedTerms = searchTerms.Count(term => candidate.Contains(term));
-            
-            if (searchTerms.Count > 0)
-            {
-                int termScore = (matchedTerms * 100) / searchTerms.Count;
-                score = Math.Max(score, termScore);
-            }
-            
-            // Special cases
-            if ((search.Contains("ucl") || search.Contains("university college london")) && 
-                candidate.Contains("university college london"))
-                return 95;
-            
-            if ((search.Contains("oxford") && candidate.Contains("oxford")) ||
-                (search.Contains("cambridge") && candidate.Contains("cambridge")) ||
-                (search.Contains("mit") && candidate.Contains("massachusetts institute")) ||
-                (search.Contains("caltech") && candidate.Contains("california institute")))
-                return 90;
-            
-            return score;
+            return _institutionNames.AsReadOnly();
         }
     }
 }
+

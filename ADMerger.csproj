@@ -12,16 +12,23 @@
     <PackageReference Include="EPPlus" Version="7.5.2" />
   </ItemGroup>
   
+  <!-- For development: copy to output directory -->
   <ItemGroup>
-    <EmbeddedResource Include="data\ucl_degree_equivalencies_FINAL.csv" />
+    <None Update="data\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   
+  <!-- For production: embed in EXE -->
   <ItemGroup>
-    <None Update="data\ucl_degree_equivalencies_FINAL.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\THE Ranking 2026.xlsx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="data\ucl_degree_equivalencies_FINAL.csv">
+      <LogicalName>ADMerger.data.ucl_degree_equivalencies_FINAL.csv</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="data\THE Ranking 2026.xlsx">
+      <LogicalName>ADMerger.data.THE_Ranking_2026.xlsx</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="data\institution_mappings.csv">
+      <LogicalName>ADMerger.data.institution_mappings.csv</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
