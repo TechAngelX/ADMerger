@@ -20,6 +20,7 @@ namespace ADMerger.Models
         public string InstitutionName { get; set; }
         public string THERanking { get; set; }
         public string OverallGradeGPA { get; set; }
+        public string DegreeStatus { get; set; } 
         public string EquivalencyNote { get; set; }
         public string UKGrade { get; set; }
     }

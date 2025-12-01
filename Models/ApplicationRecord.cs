@@ -1,5 +1,4 @@
-// Models/ApplicationRecord.cs
-
+﻿// Models/ApplicationRecord.cs
 using CsvHelper.Configuration.Attributes;
 
 namespace ADMerger.Models
@@ -40,5 +39,8 @@ namespace ADMerger.Models
        
         [Name("Equivalency note")]
         public string EquivalencyNote { get; set; }
+        
+        [Name("Grade Achieved/Pending")]
+        public string GradeAchievedPending { get; set; }
     }
 }

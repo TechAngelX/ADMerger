@@ -53,6 +53,12 @@ namespace ADMerger
             LoadData();
         }
         
+        private static string GetVersion()
+        {
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            return $"v{version.Major}.{version.Minor}.{version.Build}";
+        }
+        
         private void LoadData()
         {
             try
@@ -148,6 +154,15 @@ namespace ADMerger
             subtitleLabel.Location = new Point(33, 55);
             subtitleLabel.BackColor = Color.Transparent;
             headerPanel.Controls.Add(subtitleLabel);
+
+            Label versionLabel = new Label();
+            versionLabel.Text = GetVersion();
+            versionLabel.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
+            versionLabel.ForeColor = ColorTranslator.FromHtml("#DBEAFE");
+            versionLabel.AutoSize = true;
+            versionLabel.Location = new Point(820, 35);
+            versionLabel.BackColor = Color.Transparent;
+            headerPanel.Controls.Add(versionLabel);
 
             return headerPanel;
         }
@@ -334,7 +349,7 @@ namespace ADMerger
             {
                 using (var folderDialog = new FolderBrowserDialog())
                 {
-                    folderDialog.Description = "Select folder to save output CSV files";
+                    folderDialog.Description = "Select folder to save output Excel files";
                     folderDialog.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                     
                     if (folderDialog.ShowDialog() != DialogResult.OK)
@@ -424,7 +439,8 @@ namespace ADMerger
                         THERanking = theRanking,
                         OverallGradeGPA = match.OverallGradeGPA,
                         EquivalencyNote = match.EquivalencyNote,
-                        UKGrade = ukGrade
+                        UKGrade = ukGrade,
+                        DegreeStatus = match.GradeAchievedPending  
                     });
                 }
             }

@@ -66,7 +66,7 @@ if ($LASTEXITCODE -eq 0) {
         Write-Host "✓ No external files needed!" -ForegroundColor Green
         Write-Host "✓ Single file - ready to share!" -ForegroundColor Green
         Write-Host ""
-        Write-Host "ADMerger Standalone Package compiled." -ForegroundColor Yellow
+        Write-Host "🚀 Send ADMerger.exe to friends - it's 100% standalone!" -ForegroundColor Yellow
     }
     else {
         Write-Host "ERROR: Could not find published executable!" -ForegroundColor Red

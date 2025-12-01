@@ -1,4 +1,4 @@
-// Services/CsvService.cs
+﻿// Services/CsvService.cs
 
 using System;
 using System.Collections.Generic;
@@ -8,6 +8,8 @@ using System.Linq;
 using ADMerger.Models;
 using CsvHelper;
 using CsvHelper.Configuration;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 namespace ADMerger.Services
 {
@@ -18,7 +20,7 @@ namespace ADMerger.Services
             "ReceivedDate", "DueDate", "StudentNo", "Programme", "Forename", "Surname",
             "Gender", "DateOfBirth", "FeeStatus", "CountryOfNationality", "QualificationName",
             "DegreeSubject", "InstitutionName", "THERanking", "CountryOfStudy",
-            "EquivalencyNote", "OverallGradeGPA", "UKGrade", "Decision", "AT", "Note",
+            "EquivalencyNote", "OverallGradeGPA", "DegreeStatus", "UKGrade", "Decision", "AT", "Note",
             "Progr. Adm", "Comment"
         };
         
@@ -72,6 +74,8 @@ namespace ADMerger.Services
         
         public string GenerateOutputFiles(List<OutputRecord> data, string outputFolderPath)
         {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            
             var programmeGroups = data.GroupBy(record => record.Programme).ToList();
             var outputPaths = new List<string>();
             
@@ -82,49 +86,63 @@ namespace ADMerger.Services
                 
                 var outputPath = Path.Combine(
                     outputFolderPath, 
-                    programme + "_Latest_" + DateTime.Now.ToString("dd_MMM_yyyy_HHmm") + ".csv");
+                    programme + "_Latest_" + DateTime.Now.ToString("dd_MMM_yyyy_HHmm") + ".xlsx");
                 
-                using var writer = new StreamWriter(outputPath);
-                writer.WriteLine(string.Join(",", ColumnOrder));
-                
-                foreach (var record in records)
+                using (var package = new ExcelPackage())
                 {
-                    var values = new List<string>();
+                    var worksheet = package.Workbook.Worksheets.Add(programme);
                     
-                    foreach (var column in ColumnOrder)
+                    // Write headers
+                    for (int col = 0; col < ColumnOrder.Count; col++)
                     {
-                        string value = column switch
-                        {
-                            "ReceivedDate" => record.ReceivedDate ?? "",
-                            "DueDate" => record.DueDate ?? "",
-                            "StudentNo" => record.StudentNo ?? "",
-                            "Programme" => record.Programme ?? "",
-                            "Forename" => record.Forename ?? "",
-                            "Surname" => record.Surname ?? "",
-                            "Gender" => record.Gender ?? "",
-                            "DateOfBirth" => record.DateOfBirth ?? "",
-                            "FeeStatus" => record.FeeStatus ?? "",
-                            "CountryOfNationality" => record.CountryOfNationality ?? "",
-                            "QualificationName" => record.QualificationName ?? "",
-                            "DegreeSubject" => record.DegreeSubject ?? "",
-                            "InstitutionName" => record.InstitutionName ?? "",
-                            "THERanking" => record.THERanking ?? "NR",
-                            "CountryOfStudy" => record.CountryOfStudy ?? "",
-                            "EquivalencyNote" => record.EquivalencyNote ?? "",
-                            "OverallGradeGPA" => record.OverallGradeGPA ?? "",
-                            "UKGrade" => record.UKGrade ?? "",
-                            _ => ""
-                        };
-                        
-                        if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
-                        {
-                            value = "\"" + value.Replace("\"", "\"\"") + "\"";
-                        }
-                        
-                        values.Add(value);
+                        worksheet.Cells[1, col + 1].Value = ColumnOrder[col];
+                        worksheet.Cells[1, col + 1].Style.Font.Bold = true;
+                        worksheet.Cells[1, col + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[1, col + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(59, 130, 246));
+                        worksheet.Cells[1, col + 1].Style.Font.Color.SetColor(System.Drawing.Color.White);
+                        worksheet.Cells[1, col + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     }
                     
-                    writer.WriteLine(string.Join(",", values));
+                    // Write data
+                    int row = 2;
+                    foreach (var record in records)
+                    {
+                        for (int col = 0; col < ColumnOrder.Count; col++)
+                        {
+                            string value = ColumnOrder[col] switch
+                            {
+                                "ReceivedDate" => record.ReceivedDate ?? "",
+                                "DueDate" => record.DueDate ?? "",
+                                "StudentNo" => record.StudentNo ?? "",
+                                "Programme" => record.Programme ?? "",
+                                "Forename" => record.Forename ?? "",
+                                "Surname" => record.Surname ?? "",
+                                "Gender" => record.Gender ?? "",
+                                "DateOfBirth" => record.DateOfBirth ?? "",
+                                "FeeStatus" => record.FeeStatus ?? "",
+                                "CountryOfNationality" => record.CountryOfNationality ?? "",
+                                "QualificationName" => record.QualificationName ?? "",
+                                "DegreeSubject" => record.DegreeSubject ?? "",
+                                "InstitutionName" => record.InstitutionName ?? "",
+                                "THERanking" => record.THERanking ?? "NR",
+                                "CountryOfStudy" => record.CountryOfStudy ?? "",
+                                "EquivalencyNote" => record.EquivalencyNote ?? "",
+                                "OverallGradeGPA" => record.OverallGradeGPA ?? "",
+                                "DegreeStatus" => record.DegreeStatus ?? "",
+                                "UKGrade" => record.UKGrade ?? "",
+                                _ => ""
+                            };
+                            
+                            worksheet.Cells[row, col + 1].Value = value;
+                            worksheet.Cells[row, col + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        }
+                        row++;
+                    }
+                    
+                    // Auto-fit columns
+                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+                    
+                    package.SaveAs(new FileInfo(outputPath));
                 }
                 
                 outputPaths.Add(outputPath);
@@ -148,4 +166,3 @@ namespace ADMerger.Services
         }
     }
 }
-

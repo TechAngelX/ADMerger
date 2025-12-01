@@ -1,34 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
-    <Nullable>disable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.0.$([System.DateTime]::Now.ToString("yyMMdd")).$([System.DateTime]::Now.ToString("HHmm"))</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="33.1.0" />
+    <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="EPPlus" Version="7.5.2" />
   </ItemGroup>
   
-  <!-- For development: copy to output directory -->
   <ItemGroup>
-    <None Update="data\**\*">
+    <None Update="data\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  
-  <!-- For production: embed in EXE -->
-  <ItemGroup>
-    <EmbeddedResource Include="data\ucl_degree_equivalencies_FINAL.csv">
-      <LogicalName>ADMerger.data.ucl_degree_equivalencies_FINAL.csv</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="data\THE Ranking 2026.xlsx">
-      <LogicalName>ADMerger.data.THE_Ranking_2026.xlsx</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="data\institution_mappings.csv">
-      <LogicalName>ADMerger.data.institution_mappings.csv</LogicalName>
-    </EmbeddedResource>
   </ItemGroup>
 </Project>
