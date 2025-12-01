@@ -191,7 +191,7 @@ namespace ADMerger.Services
                                 if (DateTime.TryParse(value, out DateTime dateValue))
                                 {
                                     cell.Value = dateValue;
-                                    cell.Style.Numberformat.Format = "dd/mm/yy";
+                                    cell.Style.Numberformat.Format = "dd/mm/yyyy";
                                 }
                                 else
                                 {
