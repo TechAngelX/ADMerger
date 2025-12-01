@@ -1,4 +1,5 @@
-﻿// Services/CsvService.cs
+﻿
+// Services/CsvService.cs
 
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,16 @@ namespace ADMerger.Services
             "Progr. Adm", "Comment"
         };
         
+        private static readonly HashSet<string> RightAlignedColumns = new HashSet<string>
+        {
+            "THERanking", "OverallGradeGPA", "DegreeStatus", "UKGrade"
+        };
+        
+        private static readonly HashSet<string> DateColumns = new HashSet<string>
+        {
+            "ReceivedDate", "DueDate", "DateOfBirth"
+        };
+        
         public List<InTrayRecord> LoadInTrayRecords(string filePath)
         {
             try
@@ -40,7 +51,7 @@ namespace ADMerger.Services
             }
             catch (IOException ioEx)
             {
-                throw new InvalidOperationException($"Cannot read Document 1 (Exported new applicants csv file).\n\nPlease close the file if it's open in Excel or another program.\n\nFile: {Path.GetFileName(filePath)}", ioEx);
+                throw new InvalidOperationException($"Cannot read Document 1 (Exported new applicants inTray file).\n\nPlease close the file if it's open in Excel or another program.\n\nFile: {Path.GetFileName(filePath)}", ioEx);
             }
             catch (Exception ex)
             {
@@ -64,7 +75,7 @@ namespace ADMerger.Services
             }
             catch (IOException ioEx)
             {
-                throw new InvalidOperationException($"Cannot read Document 2 (the PorticoDepartment Application Reports file).\n\nPlease close the file if it's open in Excel or another program.\n\nFile: {Path.GetFileName(filePath)}", ioEx);
+                throw new InvalidOperationException($"Cannot read Document 2 (Dept. Application Reports file).\n\nPlease close the file if it's open in Excel or another program.\n\nFile: {Path.GetFileName(filePath)}", ioEx);
             }
             catch (Exception ex)
             {
@@ -92,15 +103,17 @@ namespace ADMerger.Services
                 {
                     var worksheet = package.Workbook.Worksheets.Add(programme);
                     
-                    // Write headers
+                    // Write headers with neutral styling
                     for (int col = 0; col < ColumnOrder.Count; col++)
                     {
-                        worksheet.Cells[1, col + 1].Value = ColumnOrder[col];
-                        worksheet.Cells[1, col + 1].Style.Font.Bold = true;
-                        worksheet.Cells[1, col + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        worksheet.Cells[1, col + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(59, 130, 246));
-                        worksheet.Cells[1, col + 1].Style.Font.Color.SetColor(System.Drawing.Color.White);
-                        worksheet.Cells[1, col + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        var headerCell = worksheet.Cells[1, col + 1];
+                        headerCell.Value = ColumnOrder[col];
+                        headerCell.Style.Font.Bold = true;
+                        headerCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        headerCell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(240, 240, 240));
+                        headerCell.Style.Font.Color.SetColor(System.Drawing.Color.Black);
+                        headerCell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                        headerCell.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     }
                     
                     // Write data
@@ -109,7 +122,8 @@ namespace ADMerger.Services
                     {
                         for (int col = 0; col < ColumnOrder.Count; col++)
                         {
-                            string value = ColumnOrder[col] switch
+                            string columnName = ColumnOrder[col];
+                            string value = columnName switch
                             {
                                 "ReceivedDate" => record.ReceivedDate ?? "",
                                 "DueDate" => record.DueDate ?? "",
@@ -133,14 +147,118 @@ namespace ADMerger.Services
                                 _ => ""
                             };
                             
-                            worksheet.Cells[row, col + 1].Value = value;
-                            worksheet.Cells[row, col + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                            var cell = worksheet.Cells[row, col + 1];
+                            
+                            // Apply alignment
+                            if (RightAlignedColumns.Contains(columnName))
+                            {
+                                cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                            }
+                            else
+                            {
+                                cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                            }
+                            
+                            // Apply specific formats
+                            if (columnName == "StudentNo")
+                            {
+                                // Store as number to avoid "stored as text" warning
+                                if (long.TryParse(value, out long studentNoValue))
+                                {
+                                    cell.Value = studentNoValue;
+                                    cell.Style.Numberformat.Format = "0"; // Whole number, no decimals
+                                }
+                                else
+                                {
+                                    cell.Value = value;
+                                }
+                            }
+                            else if (columnName == "THERanking")
+                            {
+                                // Store as text
+                                cell.Style.Numberformat.Format = "@";
+                                cell.Value = value;
+                            }
+                            else if (columnName == "Gender")
+                            {
+                                // Text format
+                                cell.Style.Numberformat.Format = "@";
+                                cell.Value = value;
+                            }
+                            else if (DateColumns.Contains(columnName) && !string.IsNullOrWhiteSpace(value))
+                            {
+                                // Date format
+                                if (DateTime.TryParse(value, out DateTime dateValue))
+                                {
+                                    cell.Value = dateValue;
+                                    cell.Style.Numberformat.Format = "dd/mm/yy";
+                                }
+                                else
+                                {
+                                    cell.Value = value;
+                                }
+                            }
+                            else if (columnName == "OverallGradeGPA" && !string.IsNullOrWhiteSpace(value))
+                            {
+                                // Percentage format
+                                if (double.TryParse(value.Replace("%", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out double percentValue))
+                                {
+                                    cell.Value = percentValue / 100.0; // Excel percentages are 0-1
+                                    cell.Style.Numberformat.Format = "0%";
+                                }
+                                else
+                                {
+                                    cell.Value = value;
+                                }
+                            }
+                            else if (columnName == "UKGrade" && !string.IsNullOrWhiteSpace(value))
+                            {
+                                // Number format with 1 decimal place
+                                if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out double gradeValue))
+                                {
+                                    cell.Value = gradeValue;
+                                    cell.Style.Numberformat.Format = "0.0";
+                                }
+                                else
+                                {
+                                    cell.Value = value;
+                                }
+                            }
+                            else
+                            {
+                                cell.Value = value;
+                            }
                         }
                         row++;
                     }
                     
-                    // Auto-fit columns
-                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+                    // Suppress "number stored as text" warnings for THERanking column
+                    int theRankingCol = ColumnOrder.IndexOf("THERanking") + 1;
+                    if (row > 2) // Only if we have data rows
+                    {
+                        var theRankingRange = worksheet.Cells[2, theRankingCol, row - 1, theRankingCol];
+                        var ignoredError = worksheet.IgnoredErrors.Add(theRankingRange);
+                        ignoredError.NumberStoredAsText = true;
+                    }
+                    
+                    // Auto-fit columns with custom widths
+                    for (int col = 1; col <= ColumnOrder.Count; col++)
+                    {
+                        string columnName = ColumnOrder[col - 1];
+                        
+                        if (columnName == "EquivalencyNote")
+                        {
+                            worksheet.Column(col).Width = 18;
+                        }
+                        else if (columnName == "InstitutionName")
+                        {
+                            worksheet.Column(col).Width = 48;
+                        }
+                        else
+                        {
+                            worksheet.Column(col).AutoFit();
+                        }
+                    }
                     
                     package.SaveAs(new FileInfo(outputPath));
                 }

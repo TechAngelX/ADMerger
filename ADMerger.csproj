@@ -4,9 +4,11 @@
     <TargetFramework>net9.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
-    <Version>1.0.$([System.DateTime]::Now.ToString("yyMMdd")).$([System.DateTime]::Now.ToString("HHmm"))</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>$(Version)</FileVersion>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <AssemblyVersion>1.0.0.$([System.DateTime]::UtcNow.ToString("HHmm"))</AssemblyVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+    <InformationalVersion>1.0.$([System.DateTime]::UtcNow.ToString("yyMMdd")).$([System.DateTime]::UtcNow.ToString("HHmm"))</InformationalVersion>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
   
   <ItemGroup>
@@ -15,8 +17,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Update="data\**\*.*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="data\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
   </ItemGroup>
 </Project>
