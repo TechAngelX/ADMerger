@@ -15,7 +15,7 @@ namespace ADMerger.Services
 
         private readonly Regex _fractionRegex = new Regex(@"(\d+(?:\.\d+)?)\s*(?:/|out of|of)\s*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
         private readonly Regex _percentRegex = new Regex(@"(\d+(?:\.\d+)?)%", RegexOptions.IgnoreCase);
-        private readonly Regex _customThresholdRegex = new Regex(@"(1st|2\.1|2\.2|3rd)[^@_]*@\s*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
+        private readonly Regex _customThresholdRegex = new Regex(@"(1st|2\.1|2\.2|3rd)[^@_:]*[:@]\s*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
         private readonly Regex _explicitGradeRegex = new Regex(@"(?:grade|gpa|average)[^0-9_]*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
 
         public GradeClassificationService(IEquivalencyService equivalencyService)
@@ -46,10 +46,10 @@ namespace ADMerger.Services
                 var customThresholds = ParseCustomThresholdsFromNote(equivalencyNote);
                 if (customThresholds.Count > 0)
                 {
-                    bool rulesArePercent = customThresholds.Values.Any(v => v > 10.0);
+                    bool rulesAreHighScale = customThresholds.Values.Any(v => v > 20.0);
                     double gradeToTest = studentGrade.Value;
 
-                    if (rulesArePercent)
+                    if (rulesAreHighScale)
                     {
                         gradeToTest = GuessScaleAndNormalize(studentGrade.Value);
                     }
@@ -236,4 +236,4 @@ namespace ADMerger.Services
         public string ParseUKGradeText(string t) => DetermineClassificationFromTextKeywords(t);
         public double? ParseGradeValue(string s) => ExtractGradeValue(s);
     }
-}   
+}
