@@ -80,19 +80,22 @@
 
             <Border Grid.Row="2" Classes="GlassCard" Padding="0" ClipToBounds="True">
                 <Grid RowDefinitions="Auto, *">
+                    
                     <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="15,10">
-                        <Grid ColumnDefinitions="100, 150, *, 100">
+                        <Grid ColumnDefinitions="110, 130, *, 150, 100">
                             <TextBlock Grid.Column="0" Text="STATUS" FontWeight="SemiBold" FontSize="12" Foreground="#64748B"/>
                             <TextBlock Grid.Column="1" Text="STUDENT NO" FontWeight="SemiBold" FontSize="12" Foreground="#64748B"/>
                             <TextBlock Grid.Column="2" Text="APPLICANT NAME" FontWeight="SemiBold" FontSize="12" Foreground="#64748B"/>
-                            <TextBlock Grid.Column="3" Text="RECEIVED" FontWeight="SemiBold" FontSize="12" Foreground="#64748B"/>
+                            <TextBlock Grid.Column="3" Text="UK GRADE" FontWeight="SemiBold" FontSize="12" Foreground="#64748B"/>
+                            <TextBlock Grid.Column="4" Text="RECEIVED" FontWeight="SemiBold" FontSize="12" Foreground="#64748B"/>
                         </Grid>
                     </Border>
                     
                     <ListBox x:Name="ProcessingList" Grid.Row="1" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="views:ProcessingItem">
-                                <Grid ColumnDefinitions="100, 150, *, 100" Margin="0,4">
+                                <Grid ColumnDefinitions="110, 130, *, 150, 100" Margin="0,4">
+                                    
                                     <Border Grid.Column="0" CornerRadius="10" Padding="8,2" HorizontalAlignment="Left"
                                             Background="{Binding StatusColor}">
                                         <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold" 
@@ -101,7 +104,16 @@
                                     
                                     <TextBlock Grid.Column="1" Text="{Binding StudentNo}" VerticalAlignment="Center" Foreground="#334155" FontFamily="Consolas, Monospace"/>
                                     <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center" FontWeight="Medium" Foreground="#1E293B"/>
-                                    <TextBlock Grid.Column="3" Text="{Binding ReceivedDate}" VerticalAlignment="Center" Foreground="#64748B" FontSize="12"/>
+                                    
+                                    <Border Grid.Column="3" CornerRadius="10" Padding="8,2" HorizontalAlignment="Left"
+                                            Background="{Binding GradeColor}">
+                                        <TextBlock Text="{Binding UkGrade}" FontSize="11" 
+                                                   Foreground="{Binding GradeForeColor}" 
+                                                   FontWeight="{Binding GradeWeight}"
+                                                   HorizontalAlignment="Center"/>
+                                    </Border>
+                                    
+                                    <TextBlock Grid.Column="4" Text="{Binding ReceivedDate}" VerticalAlignment="Center" Foreground="#64748B" FontSize="12"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
