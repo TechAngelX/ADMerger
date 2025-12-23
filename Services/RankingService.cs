@@ -25,130 +25,80 @@ namespace ADMerger.Services
         
         public void LoadRankings()
         {
+            _rankings.Clear();
+            _institutionNames.Clear();
             LoadInstitutionMappings();
             
             try
             {
-                Stream excelStream = null;
                 string excelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "THE Ranking 2026.xlsx");
                 
+                if (!File.Exists(excelPath))
+                {
+                    excelPath = Path.Combine(Directory.GetCurrentDirectory(), "data", "THE Ranking 2026.xlsx");
+                }
+
                 if (File.Exists(excelPath))
                 {
-                    excelStream = File.OpenRead(excelPath);
-                }
-                else
-                {
-                    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                    var resourceName = "ADMerger.data.THE_Ranking_2026.xlsx";
-                    excelStream = assembly.GetManifestResourceStream(resourceName);
-                    
-                    if (excelStream == null)
-                        throw new FileNotFoundException("THE Rankings file not found as file or embedded resource.");
-                }
-                
-                using (excelStream)
-                using (var package = new ExcelPackage(excelStream))
-                {
-                    var worksheet = package.Workbook.Worksheets[0];
-                    
-                    if (worksheet.Dimension == null)
-                        throw new InvalidOperationException("THE Rankings sheet is empty.");
-                    
-                    int totalRows = worksheet.Dimension.Rows;
-                    int loadedCount = 0;
-                    
-                    for (int row = 2; row <= totalRows; row++)
+                    using (var stream = File.OpenRead(excelPath))
+                    using (var package = new ExcelPackage(stream))
                     {
-                        var rankCell = worksheet.Cells[row, 1].Value;
-                        var nameCell = worksheet.Cells[row, 2].Value;
+                        var worksheet = package.Workbook.Worksheets[0]; 
                         
-                        if (rankCell != null && nameCell != null)
+                        if (worksheet.Dimension != null)
                         {
-                            string rank = rankCell.ToString().Trim();
-                            string institutionName = nameCell.ToString().Trim();
-                            
-                            if (!string.IsNullOrWhiteSpace(institutionName))
+                            int totalRows = worksheet.Dimension.Rows;
+                            for (int row = 2; row <= totalRows; row++)
                             {
-                                _rankings[institutionName] = rank;
-                                _institutionNames.Add(institutionName);
-                                loadedCount++;
+                                var rankCell = worksheet.Cells[row, 1].Value;
+                                var nameCell = worksheet.Cells[row, 2].Value;
+                                
+                                if (rankCell != null && nameCell != null)
+                                {
+                                    string rank = rankCell.ToString().Trim();
+                                    string name = nameCell.ToString().Trim();
+                                    
+                                    if (!string.IsNullOrWhiteSpace(name))
+                                    {
+                                        _rankings[name] = rank;
+                                        _institutionNames.Add(name);
+                                    }
+                                }
                             }
                         }
                     }
-                    
-                    if (loadedCount == 0)
-                        throw new InvalidOperationException($"No data loaded from Excel. Total rows: {totalRows}");
                 }
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Could not load THE Rankings: {ex.Message}", ex);
+                System.Diagnostics.Debug.WriteLine($"Ranking Load Error: {ex.Message}");
             }
         }
         
         public string GetRanking(string institutionName)
         {
-            if (string.IsNullOrWhiteSpace(institutionName))
-                return "NR";
+            if (string.IsNullOrWhiteSpace(institutionName)) return "NR";
             
-            string originalName = institutionName;
             institutionName = NormalizeAbbreviations(institutionName);
-            
-            if (institutionName == "NOT_RANKED")
-            {
-                LogToFile($"NOT RANKED: '{originalName}' (marked as not in THE Rankings)");
-                return "NR";
-            }
-            
-            LogToFile($"Original: '{originalName}' | Normalized: '{institutionName}' | InDict: {_rankings.ContainsKey(institutionName)}");
             
             if (_rankings.ContainsKey(institutionName))
             {
-                string rank = CleanRankingText(_rankings[institutionName]);
-                LogToFile($"EXACT MATCH: '{institutionName}' = Rank {rank}");
-                return rank;
+                return CleanRankingText(_rankings[institutionName]);
             }
             
             string bestMatch = _matchingService.FindBestMatch(institutionName, _institutionNames);
-            
             if (bestMatch != null)
             {
-                string rank = CleanRankingText(_rankings[bestMatch]);
-                LogToFile($"FUZZY MATCH: '{institutionName}' -> '{bestMatch}' = Rank {rank}");
-                return rank;
+                return CleanRankingText(_rankings[bestMatch]);
             }
             
-            LogToFile($"NO MATCH: '{institutionName}'");
             return "NR";
-        }
-        
-        private void LogToFile(string message)
-        {
-            try
-            {
-                string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ranking_matches.log");
-                File.AppendAllText(logPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}\n");
-            }
-            catch { }
         }
         
         private string CleanRankingText(string ranking)
         {
-            if (string.IsNullOrWhiteSpace(ranking))
-                return "NR";
-            
-            byte[] bytes = Encoding.UTF8.GetBytes(ranking);
-            string cleanRanking = Encoding.UTF8.GetString(bytes);
-            
-            cleanRanking = cleanRanking.Replace(char.ConvertFromUtf32(0x2013), "-");
-            cleanRanking = cleanRanking.Replace(char.ConvertFromUtf32(0x2014), "-");
-            
-            if (cleanRanking.Contains("â") || cleanRanking.Contains("€"))
-            {
-                cleanRanking = System.Text.RegularExpressions.Regex.Replace(cleanRanking, @"â€.", "-");
-            }
-            
-            return cleanRanking;
+            if (string.IsNullOrWhiteSpace(ranking)) return "NR";
+            return ranking.Replace(char.ConvertFromUtf32(0x2013), "-").Replace(char.ConvertFromUtf32(0x2014), "-");
         }
         
         private void LoadInstitutionMappings()
@@ -156,66 +106,24 @@ namespace ADMerger.Services
             try
             {
                 string csvPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "institution_mappings.csv");
-                
-                if (!File.Exists(csvPath))
+                if (!File.Exists(csvPath)) return;
+
+                var lines = File.ReadAllLines(csvPath);
+                foreach (var line in lines.Skip(1))
                 {
-                    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                    var resourceName = "ADMerger.data.institution_mappings.csv";
-                    var stream = assembly.GetManifestResourceStream(resourceName);
-                    
-                    if (stream == null)
-                        return;
-                    
-                    using (var reader = new StreamReader(stream))
-                    {
-                        reader.ReadLine();
-                        string line;
-                        while ((line = reader.ReadLine()) != null)
-                        {
-                            var parts = line.Split(',');
-                            if (parts.Length >= 2)
-                            {
-                                _institutionMappings[parts[0].Trim()] = parts[1].Trim();
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    using (var reader = new StreamReader(csvPath))
-                    {
-                        reader.ReadLine();
-                        string line;
-                        while ((line = reader.ReadLine()) != null)
-                        {
-                            var parts = line.Split(',');
-                            if (parts.Length >= 2)
-                            {
-                                _institutionMappings[parts[0].Trim()] = parts[1].Trim();
-                            }
-                        }
-                    }
+                    var parts = line.Split(',');
+                    if (parts.Length >= 2) _institutionMappings[parts[0].Trim()] = parts[1].Trim();
                 }
             }
-            catch
-            {
-            }
+            catch { }
         }
         
         private string NormalizeAbbreviations(string institutionName)
         {
-            if (_institutionMappings.TryGetValue(institutionName, out string mappedName))
-            {
-                return mappedName;
-            }
-            
+            if (_institutionMappings.TryGetValue(institutionName, out string mappedName)) return mappedName;
             return institutionName;
         }
-        
-        public IReadOnlyList<string> GetAllInstitutionNames()
-        {
-            return _institutionNames.AsReadOnly();
-        }
+
+        public IReadOnlyList<string> GetAllInstitutionNames() => _institutionNames.AsReadOnly();
     }
 }
-
