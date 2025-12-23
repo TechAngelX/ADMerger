@@ -10,6 +10,9 @@
     <AssemblyVersion>1.0.0.$([System.DateTime]::UtcNow.ToString("HHmm"))</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
     <InformationalVersion>1.0.$([System.DateTime]::UtcNow.ToString("yyMMdd")).$([System.DateTime]::UtcNow.ToString("HHmm"))</InformationalVersion>
+    
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="data\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
-    <None Include="audio\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
+    <EmbeddedResource Include="data\**\*" />
+    <EmbeddedResource Include="audio\**\*" />
   </ItemGroup>
 </Project>

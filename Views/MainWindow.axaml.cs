@@ -402,34 +402,53 @@ public partial class MainWindow : Window
         }
     }
 
+// Views/MainWindow.axaml.cs
+
     private void PlaySuccessSound()
     {
         try
         {
-            string soundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "audio", "confirmed.mp3");
-            
-            if (!File.Exists(soundPath)) return;
+            // 1. Define where to temporarily put the file
+            string tempPath = Path.Combine(Path.GetTempPath(), "admerger_confirmed.mp3");
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            // 2. Extract it from the Embedded Resources if it doesn't exist in temp yet
+            if (!File.Exists(tempPath))
             {
-                // macOS: Use built-in afplay
-                try { System.Diagnostics.Process.Start("afplay", $"\"{soundPath}\""); } catch { }
+                var assembly = Assembly.GetExecutingAssembly();
+                // Note: The resource name uses dots instead of slashes: ADMerger.audio.confirmed.mp3
+                var resourceName = "ADMerger.audio.confirmed.mp3"; 
+                
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        using (var fileStream = File.Create(tempPath))
+                        {
+                            stream.CopyTo(fileStream);
+                        }
+                    }
+                }
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+
+            // 3. Play the extracted file
+            if (File.Exists(tempPath))
             {
-                // Windows: Use winmm.dll to play MP3
-                try {
-                    mciSendString($"open \"{soundPath}\" type mpegvideo alias MyMp3", null, 0, IntPtr.Zero);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    System.Diagnostics.Process.Start("afplay", $"\"{tempPath}\"");
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    mciSendString($"open \"{tempPath}\" type mpegvideo alias MyMp3", null, 0, IntPtr.Zero);
                     mciSendString("play MyMp3", null, 0, IntPtr.Zero);
-                } catch { }
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                // Linux: Try paplay (PulseAudio)
-                try { System.Diagnostics.Process.Start("paplay", $"\"{soundPath}\""); } catch { }
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    System.Diagnostics.Process.Start("paplay", $"\"{tempPath}\"");
+                }
             }
         }
-        catch { /* Ignore audio errors */ }
+        catch { /* Silent fail if audio system has issues */ }
     }
     
     private void ClearLogButton_Click(object? sender, RoutedEventArgs e)
