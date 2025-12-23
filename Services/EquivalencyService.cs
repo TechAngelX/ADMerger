@@ -45,7 +45,7 @@ namespace ADMerger.Services
                     {
                         HeaderValidated = null,
                         MissingFieldFound = null,
-                        Delimiter = "\t"
+                        Delimiter = ","
                     };
                     
                     using var csv = new CsvReader(reader, config);
