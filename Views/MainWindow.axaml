@@ -47,7 +47,7 @@
                             <TextBlock Text="📥" FontSize="16"/>
                             <TextBlock Text="In-Tray File" FontWeight="SemiBold" Foreground="#334155"/>
                         </StackPanel>
-                        <TextBlock Text="New applicants CSV/XLSX" FontSize="11" Foreground="#94A3B8"/>
+                        <TextBlock Text="New applicants .csv / .xlsx" FontSize="11" Foreground="#94A3B8"/>
                         <Button x:Name="BrowseInTrayButton" Classes="Modern" Content="Select File" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
                         <TextBlock x:Name="InTrayFileLabel" Text="No file selected" FontSize="11" Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
@@ -59,7 +59,7 @@
                             <TextBlock Text="📊" FontSize="16"/>
                             <TextBlock Text="App Reports" FontWeight="SemiBold" Foreground="#334155"/>
                         </StackPanel>
-                        <TextBlock Text="Dept Reports CSV/XLSX" FontSize="11" Foreground="#94A3B8"/>
+                        <TextBlock Text="Dept Reports .csv / .xlsx" FontSize="11" Foreground="#94A3B8"/>
                         <Button x:Name="BrowseAppReportsButton" Classes="Modern" Content="Select File" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
                         <TextBlock x:Name="AppReportsFileLabel" Text="No file selected" FontSize="11" Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>

@@ -24,5 +24,6 @@
 
   <ItemGroup>
     <None Include="data\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
+    <None Include="audio\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
   </ItemGroup>
 </Project>

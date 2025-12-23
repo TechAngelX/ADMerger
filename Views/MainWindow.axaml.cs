@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices; // Required for OS checks and P/Invoke
 
 namespace ADMerger.Views;
 
@@ -78,6 +79,10 @@ public partial class MainWindow : Window
     // NEW: Observable collection for the live UI list
     public ObservableCollection<ProcessingItem> ProcessingItems { get; set; } = new ObservableCollection<ProcessingItem>();
 
+    // Windows Native Audio Import
+    [DllImport("winmm.dll")]
+    private static extern long mciSendString(string strCommand, System.Text.StringBuilder? strReturn, int iReturnLength, IntPtr hwndCallback);
+
     public MainWindow()
     {
         InitializeComponent();
@@ -106,8 +111,27 @@ public partial class MainWindow : Window
     private void SetVersion()
     {
         var assembly = Assembly.GetExecutingAssembly();
-        var infoVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-        var version = infoVersion?.InformationalVersion ?? "1.0.0";
+        
+        var infoVersionAttr = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        string version = infoVersionAttr?.InformationalVersion ?? "1.0.0";
+
+        if (string.IsNullOrEmpty(version))
+        {
+            version = assembly.GetName().Version?.ToString() ?? "1.0.0";
+        }
+
+        if (version.Contains('+'))
+        {
+            version = version.Split('+')[0];
+        }
+
+        // Truncate to Major.Minor.Year (e.g. 1.0.25)
+        var parts = version.Split('.');
+        if (parts.Length >= 3 && parts[2].Length >= 2)
+        {
+            version = $"{parts[0]}.{parts[1]}.{parts[2].Substring(0, 2)}";
+        }
+        
         VersionLabel.Text = $"v{version}";
     }
     
@@ -156,7 +180,6 @@ public partial class MainWindow : Window
             LogStatus($"Selected InTray file: {Path.GetFileName(_inTrayFilePath)}");
             CheckReadyToProcess();
             
-            // PREVIEW: Load InTray items immediately for the list
             try {
                 var records = _csvService.LoadInTrayRecords(_inTrayFilePath);
                 ProcessingItems.Clear();
@@ -254,13 +277,11 @@ public partial class MainWindow : Window
             LogStatus("=== Starting Processing ===");
             StatusLabel.Text = "Reading files...";
             
-            // Run loading on background thread to keep UI responsive
             await Task.Run(async () => {
                 
                 var inTrayRecords = _csvService.LoadInTrayRecords(_inTrayFilePath);
                 var appRecords = _csvService.LoadApplicationRecords(_appReportsFilePath);
                 
-                // UI Update: Ensure list matches file content
                 await Dispatcher.UIThread.InvokeAsync(() => {
                     ProcessingItems.Clear();
                     EmptyStatePanel.IsVisible = false;
@@ -274,7 +295,6 @@ public partial class MainWindow : Window
                     }
                 });
 
-                // PROCESSING
                 var outputRecords = new List<OutputRecord>();
                 int total = inTrayRecords.Count;
                 int current = 0;
@@ -283,7 +303,6 @@ public partial class MainWindow : Window
                 {
                     current++;
                     
-                    // Update UI for current item
                     await Dispatcher.UIThread.InvokeAsync(() => {
                         var uiItem = ProcessingItems.FirstOrDefault(p => p.StudentNo == inTray.StudentNo);
                         if (uiItem != null) uiItem.Status = "⚙ Processing...";
@@ -291,7 +310,6 @@ public partial class MainWindow : Window
                         FooterStatus.Text = $"{current}/{total} Records";
                     });
 
-                    // === CORE LOGIC START ===
                     var studentNo = inTray.StudentNo?.Trim();
                     var app = appRecords.FirstOrDefault(a => a.ApplicantID?.Trim() == studentNo);
                     
@@ -305,7 +323,6 @@ public partial class MainWindow : Window
                         continue;
                     }
                     
-                    // Safe string handling
                     var programmeCode = ProgrammeMapping.GetCode(app.Programme ?? "");
                     var ukGrade = _gradeService.DetermineUKClassification(
                         app.OverallGradeGPA ?? "", 
@@ -332,15 +349,12 @@ public partial class MainWindow : Window
                         DegreeStatus = app.GradeAchievedPending,
                         UKGrade = ukGrade
                     });
-                    // === CORE LOGIC END ===
 
-                    // Update UI Success
                     await Dispatcher.UIThread.InvokeAsync(() => {
                          var uiItem = ProcessingItems.FirstOrDefault(p => p.StudentNo == inTray.StudentNo);
                          if (uiItem != null) uiItem.Status = "✓ Done";
                     });
                     
-                    // Small artificial delay so the user can actually SEE the animation
                     await Task.Delay(20);
                 }
 
@@ -353,10 +367,12 @@ public partial class MainWindow : Window
                     return;
                 }
                 
-                // GENERATE FILES
                 await Dispatcher.UIThread.InvokeAsync(() => StatusLabel.Text = "Generating Excel files...");
                 var outputPaths = _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
                 
+                // PLAY SUCCESS SOUND (Cross-platform)
+                PlaySuccessSound();
+
                 await Dispatcher.UIThread.InvokeAsync(async () => {
                     StatusLabel.Text = "Complete!";
                     MainProgressBar.Value = 100;
@@ -365,10 +381,10 @@ public partial class MainWindow : Window
                     foreach (var path in outputPaths) LogStatus($"Generated: {Path.GetFileName(path)}");
                     
                     await ShowMessageBoxAsync("Success", 
-                        $"Processing complete!\n\nGenerated {outputPaths.Count} Excel files in:\n{_outputFolderPath}");
+                        $"Processing complete!\n\nExcel file(s) saved at:\n{_outputFolderPath}");
                 });
 
-            }); // End Task.Run
+            }); 
             
         }
         catch (Exception ex)
@@ -384,6 +400,36 @@ public partial class MainWindow : Window
             BrowseAppReportsButton.IsEnabled = true;
             BrowseOutputButton.IsEnabled = true;
         }
+    }
+
+    private void PlaySuccessSound()
+    {
+        try
+        {
+            string soundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "audio", "confirmed.mp3");
+            
+            if (!File.Exists(soundPath)) return;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                // macOS: Use built-in afplay
+                try { System.Diagnostics.Process.Start("afplay", $"\"{soundPath}\""); } catch { }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Windows: Use winmm.dll to play MP3
+                try {
+                    mciSendString($"open \"{soundPath}\" type mpegvideo alias MyMp3", null, 0, IntPtr.Zero);
+                    mciSendString("play MyMp3", null, 0, IntPtr.Zero);
+                } catch { }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // Linux: Try paplay (PulseAudio)
+                try { System.Diagnostics.Process.Start("paplay", $"\"{soundPath}\""); } catch { }
+            }
+        }
+        catch { /* Ignore audio errors */ }
     }
     
     private void ClearLogButton_Click(object? sender, RoutedEventArgs e)
