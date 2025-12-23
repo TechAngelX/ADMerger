@@ -7,7 +7,7 @@ namespace ADMerger.Models
     public class ApplicationRecord
     {
         [Name("Applicant ID")]
-        public string ApplicantID { get; set; }
+        public string? ApplicantID { get; set; }
        
         public string? Programme { get; set; }
         public string? Forename { get; set; }

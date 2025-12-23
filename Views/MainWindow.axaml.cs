@@ -1,9 +1,12 @@
 // Views/MainWindow.axaml.cs
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Avalonia.Media; 
+using System.Collections.ObjectModel; 
 using ADMerger.Services;
 using ADMerger.Models;
 using ADMerger.Configuration;  
@@ -13,8 +16,52 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace ADMerger.Views;
+
+// Simple UI Model for the list
+public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
+{
+    public string? StudentNo { get; set; }
+    public string? Name { get; set; }
+    public string? ReceivedDate { get; set; }
+    
+    private string _status = "Pending";
+    public string Status 
+    { 
+        get => _status; 
+        set { _status = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Status))); OnColorsChanged(); } 
+    }
+
+    // Dynamic Colors based on Status
+    public IBrush StatusColor { get; private set; } = Brushes.LightGray;
+    public IBrush StatusForeColor { get; private set; } = Brushes.Gray;
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnColorsChanged()
+    {
+        if (Status.Contains("Done") || Status.Contains("Success")) {
+            StatusColor = SolidColorBrush.Parse("#D1FAE5"); // Light Green
+            StatusForeColor = SolidColorBrush.Parse("#059669"); // Dark Green
+        }
+        else if (Status.Contains("Processing")) {
+             StatusColor = SolidColorBrush.Parse("#DBEAFE"); // Light Blue
+             StatusForeColor = SolidColorBrush.Parse("#2563EB"); // Blue
+        }
+        else if (Status.Contains("Error") || Status.Contains("Missing")) {
+             StatusColor = SolidColorBrush.Parse("#FEE2E2"); // Light Red
+             StatusForeColor = SolidColorBrush.Parse("#DC2626"); // Red
+        }
+        else {
+             StatusColor = SolidColorBrush.Parse("#F1F5F9"); // Gray
+             StatusForeColor = SolidColorBrush.Parse("#64748B"); // Dark Gray
+        }
+        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(StatusColor)));
+        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(StatusForeColor)));
+    }
+}
 
 public partial class MainWindow : Window
 {
@@ -28,10 +75,16 @@ public partial class MainWindow : Window
     private string _appReportsFilePath = string.Empty;
     private string _outputFolderPath = string.Empty;
     
+    // NEW: Observable collection for the live UI list
+    public ObservableCollection<ProcessingItem> ProcessingItems { get; set; } = new ObservableCollection<ProcessingItem>();
+
     public MainWindow()
     {
         InitializeComponent();
         
+        // Bind the list box
+        ProcessingList.ItemsSource = ProcessingItems;
+
         _csvService = new CsvService();
         _equivalencyService = new EquivalencyService();
         _matchingService = new InstitutionMatchingService();
@@ -55,7 +108,7 @@ public partial class MainWindow : Window
         var assembly = Assembly.GetExecutingAssembly();
         var infoVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         var version = infoVersion?.InformationalVersion ?? "1.0.0";
-        VersionLabel.Text = $"UCL Admissions Data Processor v{version}";
+        VersionLabel.Text = $"v{version}";
     }
     
     private void LoadRankingsAndEquivalencies()
@@ -90,16 +143,8 @@ public partial class MainWindow : Window
                 new FilePickerFileType("Excel or CSV Files")
                 {
                     Patterns = new[] { "*.xlsx", "*.csv" },
-                    AppleUniformTypeIdentifiers = new[] 
-                    { 
-                        "public.comma-separated-values-text", 
-                        "org.openxmlformats.spreadsheetml.sheet" 
-                    },
-                    MimeTypes = new[] 
-                    { 
-                        "text/csv", 
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
-                    }
+                    AppleUniformTypeIdentifiers = new[] { "public.comma-separated-values-text", "org.openxmlformats.spreadsheetml.sheet" },
+                    MimeTypes = new[] { "text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }
                 }
             }
         });
@@ -110,6 +155,22 @@ public partial class MainWindow : Window
             InTrayFileLabel.Text = Path.GetFileName(_inTrayFilePath);
             LogStatus($"Selected InTray file: {Path.GetFileName(_inTrayFilePath)}");
             CheckReadyToProcess();
+            
+            // PREVIEW: Load InTray items immediately for the list
+            try {
+                var records = _csvService.LoadInTrayRecords(_inTrayFilePath);
+                ProcessingItems.Clear();
+                foreach(var r in records) {
+                    ProcessingItems.Add(new ProcessingItem { 
+                        StudentNo = r.StudentNo, 
+                        Name = r.Name, 
+                        ReceivedDate = r.ReceivedOn,
+                        Status = "⏳ Pending"
+                    });
+                }
+                EmptyStatePanel.IsVisible = false;
+                FooterStatus.Text = $"{ProcessingItems.Count} Records waiting";
+            } catch {}
         }
     }
     
@@ -127,16 +188,8 @@ public partial class MainWindow : Window
                 new FilePickerFileType("Excel or CSV Files")
                 {
                     Patterns = new[] { "*.xlsx", "*.csv" },
-                    AppleUniformTypeIdentifiers = new[] 
-                    { 
-                        "public.comma-separated-values-text", 
-                        "org.openxmlformats.spreadsheetml.sheet" 
-                    },
-                    MimeTypes = new[] 
-                    { 
-                        "text/csv", 
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
-                    }
+                    AppleUniformTypeIdentifiers = new[] { "public.comma-separated-values-text", "org.openxmlformats.spreadsheetml.sheet" },
+                    MimeTypes = new[] { "text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }
                 }
             }
         });
@@ -180,13 +233,11 @@ public partial class MainWindow : Window
         
         if (ready)
         {
-            StatusLabel.Text = "Ready to process! Click the button above.";
-            FooterStatus.Text = "Ready to process";
+            StatusLabel.Text = "Ready to start processing";
         }
         else
         {
-            StatusLabel.Text = "Load all files to begin";
-            FooterStatus.Text = "Waiting for files...";
+            StatusLabel.Text = "Waiting for files...";
         }
     }
     
@@ -196,43 +247,134 @@ public partial class MainWindow : Window
         BrowseInTrayButton.IsEnabled = false;
         BrowseAppReportsButton.IsEnabled = false;
         BrowseOutputButton.IsEnabled = false;
+        MainProgressBar.Value = 0;
         
         try
         {
             LogStatus("=== Starting Processing ===");
+            StatusLabel.Text = "Reading files...";
             
-            LogStatus("Loading InTray records...");
-            var inTrayRecords = _csvService.LoadInTrayRecords(_inTrayFilePath);
-            LogStatus($"Loaded {inTrayRecords.Count} InTray records");
+            // Run loading on background thread to keep UI responsive
+            await Task.Run(async () => {
+                
+                var inTrayRecords = _csvService.LoadInTrayRecords(_inTrayFilePath);
+                var appRecords = _csvService.LoadApplicationRecords(_appReportsFilePath);
+                
+                // UI Update: Ensure list matches file content
+                await Dispatcher.UIThread.InvokeAsync(() => {
+                    ProcessingItems.Clear();
+                    EmptyStatePanel.IsVisible = false;
+                    foreach(var r in inTrayRecords) {
+                        ProcessingItems.Add(new ProcessingItem { 
+                            StudentNo = r.StudentNo, 
+                            Name = r.Name, 
+                            ReceivedDate = r.ReceivedOn,
+                            Status = "⏳ Pending"
+                        });
+                    }
+                });
+
+                // PROCESSING
+                var outputRecords = new List<OutputRecord>();
+                int total = inTrayRecords.Count;
+                int current = 0;
+
+                foreach (var inTray in inTrayRecords)
+                {
+                    current++;
+                    
+                    // Update UI for current item
+                    await Dispatcher.UIThread.InvokeAsync(() => {
+                        var uiItem = ProcessingItems.FirstOrDefault(p => p.StudentNo == inTray.StudentNo);
+                        if (uiItem != null) uiItem.Status = "⚙ Processing...";
+                        MainProgressBar.Value = (double)current / total * 100;
+                        FooterStatus.Text = $"{current}/{total} Records";
+                    });
+
+                    // === CORE LOGIC START ===
+                    var studentNo = inTray.StudentNo?.Trim();
+                    var app = appRecords.FirstOrDefault(a => a.ApplicantID?.Trim() == studentNo);
+                    
+                    if (app == null)
+                    {
+                        LogStatus($"Warning: No application record found for {inTray.StudentNo}");
+                         await Dispatcher.UIThread.InvokeAsync(() => {
+                             var uiItem = ProcessingItems.FirstOrDefault(p => p.StudentNo == inTray.StudentNo);
+                             if (uiItem != null) uiItem.Status = "⚠️ Missing Data";
+                         });
+                        continue;
+                    }
+                    
+                    // Safe string handling
+                    var programmeCode = ProgrammeMapping.GetCode(app.Programme ?? "");
+                    var ukGrade = _gradeService.DetermineUKClassification(
+                        app.OverallGradeGPA ?? "", 
+                        app.EquivalencyNote ?? "", 
+                        app.CountryOfStudy ?? "");
+                    var theRanking = _rankingService.GetRanking(app.InstitutionName ?? "");
+                    
+                    outputRecords.Add(new OutputRecord
+                    {
+                        ReceivedDate = DateFormatter.FormatDate(inTray.ReceivedOn ?? ""),
+                        DueDate = DateFormatter.CalculateDueDate(inTray.ReceivedOn ?? ""),
+                        StudentNo = inTray.StudentNo,
+                        Programme = programmeCode,
+                        Forename = app.Forename,
+                        Surname = app.Surname,
+                        FeeStatus = app.FeeStatus,
+                        QualificationName = app.QualificationName,
+                        DegreeSubject = app.DegreeSubject,
+                        InstitutionName = app.InstitutionName,
+                        THERanking = theRanking,
+                        CountryOfStudy = app.CountryOfStudy,
+                        EquivalencyNote = app.EquivalencyNote,
+                        OverallGradeGPA = app.OverallGradeGPA,
+                        DegreeStatus = app.GradeAchievedPending,
+                        UKGrade = ukGrade
+                    });
+                    // === CORE LOGIC END ===
+
+                    // Update UI Success
+                    await Dispatcher.UIThread.InvokeAsync(() => {
+                         var uiItem = ProcessingItems.FirstOrDefault(p => p.StudentNo == inTray.StudentNo);
+                         if (uiItem != null) uiItem.Status = "✓ Done";
+                    });
+                    
+                    // Small artificial delay so the user can actually SEE the animation
+                    await Task.Delay(20);
+                }
+
+                if (outputRecords.Count == 0)
+                {
+                    await Dispatcher.UIThread.InvokeAsync(async () => {
+                         StatusLabel.Text = "No matches found";
+                         await ShowMessageBoxAsync("No Matches", "No matches found between files.");
+                    });
+                    return;
+                }
+                
+                // GENERATE FILES
+                await Dispatcher.UIThread.InvokeAsync(() => StatusLabel.Text = "Generating Excel files...");
+                var outputPaths = _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
+                
+                await Dispatcher.UIThread.InvokeAsync(async () => {
+                    StatusLabel.Text = "Complete!";
+                    MainProgressBar.Value = 100;
+                    FooterStatus.Text = "Finished";
+                    
+                    foreach (var path in outputPaths) LogStatus($"Generated: {Path.GetFileName(path)}");
+                    
+                    await ShowMessageBoxAsync("Success", 
+                        $"Processing complete!\n\nGenerated {outputPaths.Count} Excel files in:\n{_outputFolderPath}");
+                });
+
+            }); // End Task.Run
             
-            LogStatus("Loading Application records...");
-            var appRecords = _csvService.LoadApplicationRecords(_appReportsFilePath);
-            LogStatus($"Loaded {appRecords.Count} Application records");
-            
-            LogStatus("Merging and enriching data...");
-            var outputRecords = MergeAndEnrichData(inTrayRecords, appRecords);
-            LogStatus($"Generated {outputRecords.Count} output records");
-            
-            LogStatus("Generating Excel files...");
-            var outputPaths = _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
-            
-            LogStatus("=== Processing Complete ===");
-            LogStatus("Generated files:");
-            foreach (var path in outputPaths)
-            {
-                LogStatus($"  - {Path.GetFileName(path)}");
-            }
-            
-            FooterStatus.Text = $"Complete! Generated {outputPaths.Count} files";
-            
-            await ShowMessageBoxAsync("Success", 
-                $"Processing complete!\n\nGenerated {outputPaths.Count} Excel files in:\n{_outputFolderPath}");
         }
         catch (Exception ex)
         {
             LogStatus($"ERROR: {ex.Message}");
-            FooterStatus.Text = "Error occurred - check log";
-            
+            StatusLabel.Text = "Error occurred";
             await ShowMessageBoxAsync("Error", $"Processing failed:\n\n{ex.Message}");
         }
         finally
@@ -242,58 +384,6 @@ public partial class MainWindow : Window
             BrowseAppReportsButton.IsEnabled = true;
             BrowseOutputButton.IsEnabled = true;
         }
-    }
-    
-    private List<OutputRecord> MergeAndEnrichData(
-        List<InTrayRecord> inTrayRecords, 
-        List<ApplicationRecord> appRecords)
-    {
-        var outputRecords = new List<OutputRecord>();
-        
-        foreach (var inTray in inTrayRecords)
-        {
-            var app = appRecords.FirstOrDefault(a => a.ApplicantID == inTray.StudentNo);
-            
-            if (app == null)
-            {
-                LogStatus($"Warning: No application record found for {inTray.StudentNo}");
-                continue;
-            }
-            
-            var programmeCode = ProgrammeMapping.GetCode(app.Programme);
-            
-            var ukGrade = _gradeService.DetermineUKClassification(
-                app.OverallGradeGPA,
-                app.EquivalencyNote,
-                app.CountryOfStudy
-            );
-            
-            var theRanking = _rankingService.GetRanking(app.InstitutionName ?? "");
-            
-            var output = new OutputRecord
-            {
-                ReceivedDate = DateFormatter.FormatDate(inTray.ReceivedOn),
-                DueDate = DateFormatter.CalculateDueDate(inTray.ReceivedOn),
-                StudentNo = inTray.StudentNo,
-                Programme = programmeCode,
-                Forename = app.Forename,
-                Surname = app.Surname,
-                FeeStatus = app.FeeStatus,
-                QualificationName = app.QualificationName,
-                DegreeSubject = app.DegreeSubject,
-                InstitutionName = app.InstitutionName,
-                THERanking = theRanking,
-                CountryOfStudy = app.CountryOfStudy,
-                EquivalencyNote = app.EquivalencyNote,
-                OverallGradeGPA = app.OverallGradeGPA,
-                DegreeStatus = app.GradeAchievedPending,
-                UKGrade = ukGrade
-            };
-            
-            outputRecords.Add(output);
-        }
-        
-        return outputRecords;
     }
     
     private void ClearLogButton_Click(object? sender, RoutedEventArgs e)
@@ -312,6 +402,11 @@ public partial class MainWindow : Window
         AppReportsFileLabel.Text = "No file selected";
         OutputFolderLabel.Text = "No folder selected";
         StatusLog.Text = string.Empty;
+        
+        ProcessingItems.Clear();
+        EmptyStatePanel.IsVisible = true;
+        MainProgressBar.Value = 0;
+        FooterStatus.Text = "0/0 Records";
         
         CheckReadyToProcess();
         LogStatus("Application reset");
@@ -341,32 +436,43 @@ public partial class MainWindow : Window
             Height = 250,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             CanResize = false,
-            Content = new StackPanel
+            SystemDecorations = SystemDecorations.BorderOnly,
+            ExtendClientAreaToDecorationsHint = true,
+            Background = SolidColorBrush.Parse("#FFFFFF"),
+            Content = new Border 
             {
-                Margin = new Avalonia.Thickness(20),
-                Spacing = 15,
-                Children =
+                BorderBrush = SolidColorBrush.Parse("#E2E8F0"),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(20),
+                Child = new StackPanel
                 {
-                    new TextBlock 
-                    { 
-                        Text = message, 
-                        TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                        FontSize = 14
-                    },
-                    new Button
+                    Spacing = 20,
+                    Children =
                     {
-                        Content = "OK",
-                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                        Padding = new Avalonia.Thickness(40, 12),
-                        Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4299E1")),
-                        Foreground = Avalonia.Media.Brushes.White,
-                        CornerRadius = new Avalonia.CornerRadius(4)
+                        new TextBlock { Text = title, FontWeight = FontWeight.Bold, FontSize = 18, Foreground = SolidColorBrush.Parse("#1E293B") },
+                        new TextBlock 
+                        { 
+                            Text = message, 
+                            TextWrapping = TextWrapping.Wrap,
+                            FontSize = 14,
+                            Foreground = SolidColorBrush.Parse("#475569")
+                        },
+                        new Button
+                        {
+                            Content = "OK",
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                            Padding = new Thickness(30, 10),
+                            Background = SolidColorBrush.Parse("#2563EB"),
+                            Foreground = Brushes.White,
+                            CornerRadius = new CornerRadius(6)
+                        }
                     }
                 }
             }
         };
         
-        ((Button)((StackPanel)messageBox.Content).Children[1]).Click += (s, e) => messageBox.Close();
+        var button = ((StackPanel)((Border)messageBox.Content).Child).Children.OfType<Button>().First();
+        button.Click += (s, e) => messageBox.Close();
         
         await messageBox.ShowDialog(this);
     }
