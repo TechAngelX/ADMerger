@@ -10,14 +10,15 @@ using System.Collections.ObjectModel;
 using ADMerger.Services;
 using ADMerger.Models;
 using ADMerger.Configuration;  
-using ADMerger.Utilities;       
+using ADMerger.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Runtime.InteropServices; // Required for OS checks and P/Invoke
+using System.Runtime.InteropServices;
 
 namespace ADMerger.Views;
 
@@ -31,7 +32,7 @@ public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
     private string _status = "Pending";
     public string Status 
     { 
-        get => _status; 
+        get => _status;
         set { _status = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Status))); OnColorsChanged(); } 
     }
 
@@ -40,7 +41,6 @@ public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
     public IBrush StatusForeColor { get; private set; } = Brushes.Gray;
 
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-
     private void OnColorsChanged()
     {
         if (Status.Contains("Done") || Status.Contains("Success")) {
@@ -51,7 +51,7 @@ public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
              StatusColor = SolidColorBrush.Parse("#DBEAFE"); // Light Blue
              StatusForeColor = SolidColorBrush.Parse("#2563EB"); // Blue
         }
-        else if (Status.Contains("Error") || Status.Contains("Missing")) {
+        else if (Status.Contains("Error") || Status.Contains("Missing") || Status.Contains("Stopped")) {
              StatusColor = SolidColorBrush.Parse("#FEE2E2"); // Light Red
              StatusForeColor = SolidColorBrush.Parse("#DC2626"); // Red
         }
@@ -75,19 +75,19 @@ public partial class MainWindow : Window
     private string _inTrayFilePath = string.Empty;
     private string _appReportsFilePath = string.Empty;
     private string _outputFolderPath = string.Empty;
-    
-    // NEW: Observable collection for the live UI list
+
+    // Cancellation support
+    private CancellationTokenSource? _cancellationTokenSource;
+    private bool _isProcessing = false;
+
     public ObservableCollection<ProcessingItem> ProcessingItems { get; set; } = new ObservableCollection<ProcessingItem>();
 
-    // Windows Native Audio Import
     [DllImport("winmm.dll")]
     private static extern long mciSendString(string strCommand, System.Text.StringBuilder? strReturn, int iReturnLength, IntPtr hwndCallback);
 
     public MainWindow()
     {
         InitializeComponent();
-        
-        // Bind the list box
         ProcessingList.ItemsSource = ProcessingItems;
 
         _csvService = new CsvService();
@@ -111,10 +111,8 @@ public partial class MainWindow : Window
     private void SetVersion()
     {
         var assembly = Assembly.GetExecutingAssembly();
-        
         var infoVersionAttr = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         string version = infoVersionAttr?.InformationalVersion ?? "1.0.0";
-
         if (string.IsNullOrEmpty(version))
         {
             version = assembly.GetName().Version?.ToString() ?? "1.0.0";
@@ -125,7 +123,6 @@ public partial class MainWindow : Window
             version = version.Split('+')[0];
         }
 
-        // Truncate to Major.Minor.Year (e.g. 1.0.25)
         var parts = version.Split('.');
         if (parts.Length >= 3 && parts[2].Length >= 2)
         {
@@ -172,7 +169,7 @@ public partial class MainWindow : Window
                 }
             }
         });
-        
+
         if (files.Count > 0)
         {
             _inTrayFilePath = files[0].Path.LocalPath;
@@ -180,6 +177,7 @@ public partial class MainWindow : Window
             LogStatus($"Selected InTray file: {Path.GetFileName(_inTrayFilePath)}");
             CheckReadyToProcess();
             
+            // Try-catch block to prevent crash on bad file selection immediately
             try {
                 var records = _csvService.LoadInTrayRecords(_inTrayFilePath);
                 ProcessingItems.Clear();
@@ -193,7 +191,11 @@ public partial class MainWindow : Window
                 }
                 EmptyStatePanel.IsVisible = false;
                 FooterStatus.Text = $"{ProcessingItems.Count} Records waiting";
-            } catch {}
+            } 
+            catch (Exception ex) {
+                LogStatus($"Error previewing file: {ex.Message}");
+                StatusLabel.Text = "File Error (Check Log)";
+            }
         }
     }
     
@@ -216,7 +218,6 @@ public partial class MainWindow : Window
                 }
             }
         });
-        
         if (files.Count > 0)
         {
             _appReportsFilePath = files[0].Path.LocalPath;
@@ -236,7 +237,6 @@ public partial class MainWindow : Window
             Title = "Select Output Folder",
             AllowMultiple = false
         });
-        
         if (folders.Count > 0)
         {
             _outputFolderPath = folders[0].Path.LocalPath;
@@ -251,7 +251,6 @@ public partial class MainWindow : Window
         bool ready = !string.IsNullOrEmpty(_inTrayFilePath) &&
                      !string.IsNullOrEmpty(_appReportsFilePath) &&
                      !string.IsNullOrEmpty(_outputFolderPath);
-        
         ProcessButton.IsEnabled = ready;
         
         if (ready)
@@ -266,20 +265,43 @@ public partial class MainWindow : Window
     
     private async void ProcessButton_Click(object? sender, RoutedEventArgs e)
     {
-        ProcessButton.IsEnabled = false;
+        // === CANCELLATION LOGIC ===
+        if (_isProcessing)
+        {
+            _cancellationTokenSource?.Cancel();
+            ProcessButton.Content = "Stopping...";
+            ProcessButton.IsEnabled = false; // Prevent double clicks
+            StatusLabel.Text = "Stopping operation...";
+            LogStatus("User requested cancellation.");
+            return;
+        }
+
+        // === START PROCESSING ===
+        _isProcessing = true;
+        _cancellationTokenSource = new CancellationTokenSource();
+        var token = _cancellationTokenSource.Token;
+
+        ProcessButton.Content = "🛑 STOP"; // Change button to Stop
+        ProcessButton.Background = SolidColorBrush.Parse("#DC2626"); // Red color
+        
         BrowseInTrayButton.IsEnabled = false;
         BrowseAppReportsButton.IsEnabled = false;
         BrowseOutputButton.IsEnabled = false;
         MainProgressBar.Value = 0;
-        
+
         try
         {
             LogStatus("=== Starting Processing ===");
-            StatusLabel.Text = "Reading files...";
+            StatusLabel.Text = "Reading files (this may take a moment)...";
             
             await Task.Run(async () => {
                 
+                // Check cancellation before heavy lifting
+                if (token.IsCancellationRequested) return;
+
                 var inTrayRecords = _csvService.LoadInTrayRecords(_inTrayFilePath);
+                
+                if (token.IsCancellationRequested) return;
                 var appRecords = _csvService.LoadApplicationRecords(_appReportsFilePath);
                 
                 await Dispatcher.UIThread.InvokeAsync(() => {
@@ -301,8 +323,17 @@ public partial class MainWindow : Window
 
                 foreach (var inTray in inTrayRecords)
                 {
+                    // === CHECK CANCELLATION INSIDE LOOP ===
+                    if (token.IsCancellationRequested)
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(() => {
+                            StatusLabel.Text = "Operation Stopped";
+                            LogStatus("Processing stopped by user.");
+                        });
+                        return; // Break out of the background task
+                    }
+
                     current++;
-                    
                     await Dispatcher.UIThread.InvokeAsync(() => {
                         var uiItem = ProcessingItems.FirstOrDefault(p => p.StudentNo == inTray.StudentNo);
                         if (uiItem != null) uiItem.Status = "⚙ Processing...";
@@ -312,22 +343,25 @@ public partial class MainWindow : Window
 
                     var studentNo = inTray.StudentNo?.Trim();
                     var app = appRecords.FirstOrDefault(a => a.ApplicantID?.Trim() == studentNo);
-                    
+
                     if (app == null)
                     {
                         LogStatus($"Warning: No application record found for {inTray.StudentNo}");
-                         await Dispatcher.UIThread.InvokeAsync(() => {
+                        await Dispatcher.UIThread.InvokeAsync(() => {
                              var uiItem = ProcessingItems.FirstOrDefault(p => p.StudentNo == inTray.StudentNo);
                              if (uiItem != null) uiItem.Status = "⚠️ Missing Data";
-                         });
+                        });
                         continue;
                     }
                     
                     var programmeCode = ProgrammeMapping.GetCode(app.Programme ?? "");
+                    
                     var ukGrade = _gradeService.DetermineUKClassification(
                         app.OverallGradeGPA ?? "", 
                         app.EquivalencyNote ?? "", 
-                        app.CountryOfStudy ?? "");
+                        app.CountryOfStudy ?? "",
+                        app.QualificationName ?? "");
+
                     var theRanking = _rankingService.GetRanking(app.InstitutionName ?? "");
                     
                     outputRecords.Add(new OutputRecord
@@ -354,8 +388,9 @@ public partial class MainWindow : Window
                          var uiItem = ProcessingItems.FirstOrDefault(p => p.StudentNo == inTray.StudentNo);
                          if (uiItem != null) uiItem.Status = "✓ Done";
                     });
-                    
-                    await Task.Delay(20);
+
+                    // Small delay to keep UI responsive
+                    await Task.Delay(5); 
                 }
 
                 if (outputRecords.Count == 0)
@@ -367,10 +402,12 @@ public partial class MainWindow : Window
                     return;
                 }
                 
+                // Check cancellation before saving
+                if (token.IsCancellationRequested) return;
+
                 await Dispatcher.UIThread.InvokeAsync(() => StatusLabel.Text = "Generating Excel files...");
                 var outputPaths = _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
                 
-                // PLAY SUCCESS SOUND (Cross-platform)
                 PlaySuccessSound();
 
                 await Dispatcher.UIThread.InvokeAsync(async () => {
@@ -383,9 +420,12 @@ public partial class MainWindow : Window
                     await ShowMessageBoxAsync("Success", 
                         $"Processing complete!\n\nExcel file(s) saved at:\n{_outputFolderPath}");
                 });
-
-            }); 
-            
+            }, token); 
+        }
+        catch (OperationCanceledException)
+        {
+             LogStatus("Operation cancelled.");
+             StatusLabel.Text = "Cancelled";
         }
         catch (Exception ex)
         {
@@ -395,6 +435,16 @@ public partial class MainWindow : Window
         }
         finally
         {
+            // === RESET UI STATE ===
+            _isProcessing = false;
+            if (_cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Dispose();
+                _cancellationTokenSource = null;
+            }
+
+            ProcessButton.Content = "Process Files"; // Reset Text
+            ProcessButton.Background = SolidColorBrush.Parse("#2563EB"); // Reset Color (Blue)
             ProcessButton.IsEnabled = true;
             BrowseInTrayButton.IsEnabled = true;
             BrowseAppReportsButton.IsEnabled = true;
@@ -402,22 +452,15 @@ public partial class MainWindow : Window
         }
     }
 
-// Views/MainWindow.axaml.cs
-
     private void PlaySuccessSound()
     {
         try
         {
-            // 1. Define where to temporarily put the file
             string tempPath = Path.Combine(Path.GetTempPath(), "admerger_confirmed.mp3");
-
-            // 2. Extract it from the Embedded Resources if it doesn't exist in temp yet
             if (!File.Exists(tempPath))
             {
                 var assembly = Assembly.GetExecutingAssembly();
-                // Note: The resource name uses dots instead of slashes: ADMerger.audio.confirmed.mp3
-                var resourceName = "ADMerger.audio.confirmed.mp3"; 
-                
+                var resourceName = "ADMerger.audio.confirmed.mp3";
                 using (var stream = assembly.GetManifestResourceStream(resourceName))
                 {
                     if (stream != null)
@@ -430,7 +473,6 @@ public partial class MainWindow : Window
                 }
             }
 
-            // 3. Play the extracted file
             if (File.Exists(tempPath))
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -448,7 +490,7 @@ public partial class MainWindow : Window
                 }
             }
         }
-        catch { /* Silent fail if audio system has issues */ }
+        catch { }
     }
     
     private void ClearLogButton_Click(object? sender, RoutedEventArgs e)
@@ -459,6 +501,12 @@ public partial class MainWindow : Window
     
     private void ResetButton_Click(object? sender, RoutedEventArgs e)
     {
+        // Cancel any running process first
+        if (_isProcessing)
+        {
+            _cancellationTokenSource?.Cancel();
+        }
+
         _inTrayFilePath = string.Empty;
         _appReportsFilePath = string.Empty;
         _outputFolderPath = string.Empty;
@@ -479,7 +527,9 @@ public partial class MainWindow : Window
     
     private void ExitButton_Click(object? sender, RoutedEventArgs e)
     {
-        Close();
+        // HARD EXIT: Kills the process immediately. 
+        // This is useful if the app is stuck reading a bad file.
+        Environment.Exit(0);
     }
     
     private void LogStatus(string message)
