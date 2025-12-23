@@ -1,5 +1,4 @@
-﻿
-// Services/CsvService.cs
+﻿// Services/CsvService.cs
 
 using System;
 using System.Collections.Generic;
@@ -19,7 +18,7 @@ namespace ADMerger.Services
         private static readonly List<string> ColumnOrder = new List<string>
         {
             "ReceivedDate", "DueDate", "StudentNo", "Programme", "Forename", "Surname",
-            "Gender", "DateOfBirth", "FeeStatus", "CountryOfNationality", "QualificationName",
+            "FeeStatus", "QualificationName",
             "DegreeSubject", "InstitutionName", "THERanking", "CountryOfStudy",
             "EquivalencyNote", "OverallGradeGPA", "DegreeStatus", "UKGrade", "Decision", "AT", "Note",
             "Progr. Adm", "Comment"
@@ -32,13 +31,20 @@ namespace ADMerger.Services
         
         private static readonly HashSet<string> DateColumns = new HashSet<string>
         {
-            "ReceivedDate", "DueDate", "DateOfBirth"
+            "ReceivedDate", "DueDate"
         };
-        
+
         public List<InTrayRecord> LoadInTrayRecords(string filePath)
         {
             try
             {
+                var extension = Path.GetExtension(filePath).ToLower();
+                
+                if (extension == ".xlsx")
+                {
+                    return LoadInTrayRecordsFromExcel(filePath);
+                }
+                
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     HeaderValidated = null,
@@ -58,11 +64,66 @@ namespace ADMerger.Services
                 throw new InvalidOperationException($"Error loading InTray records: {ex.Message}", ex);
             }
         }
+
+        private List<InTrayRecord> LoadInTrayRecordsFromExcel(string filePath)
+        {
+            var records = new List<InTrayRecord>();
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            using (var package = new ExcelPackage(new FileInfo(filePath)))
+            {
+                var worksheet = package.Workbook.Worksheets[0];
+                if (worksheet.Dimension == null) return records;
+
+                int rowCount = worksheet.Dimension.Rows;
+                int colCount = worksheet.Dimension.Columns;
+
+                var headerMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                for (int col = 1; col <= colCount; col++)
+                {
+                    var header = worksheet.Cells[1, col].Text.Trim();
+                    if (!string.IsNullOrEmpty(header))
+                    {
+                        headerMap[header] = col;
+                    }
+                }
+
+                string GetValue(int row, string headerName)
+                {
+                    if (headerMap.TryGetValue(headerName, out int colIndex))
+                    {
+                        var cell = worksheet.Cells[row, colIndex];
+                        return cell.Text?.Trim() ?? "";
+                    }
+                    return "";
+                }
+
+                for (int row = 2; row <= rowCount; row++)
+                {
+                    var record = new InTrayRecord
+                    {
+                        ReceivedOn = GetValue(row, "Received on"),
+                        StudentNo = GetValue(row, "Student No."),
+                        Name = GetValue(row, "Name")
+                    };
+                    records.Add(record);
+                }
+            }
+
+            return records;
+        }
         
         public List<ApplicationRecord> LoadApplicationRecords(string filePath)
         {
             try
             {
+                var extension = Path.GetExtension(filePath).ToLower();
+                
+                if (extension == ".xlsx")
+                {
+                    return LoadApplicationRecordsFromExcel(filePath);
+                }
+                
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     HeaderValidated = null,
@@ -82,8 +143,64 @@ namespace ADMerger.Services
                 throw new InvalidOperationException($"Error loading Application records: {ex.Message}", ex);
             }
         }
+
+        private List<ApplicationRecord> LoadApplicationRecordsFromExcel(string filePath)
+        {
+            var records = new List<ApplicationRecord>();
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            using (var package = new ExcelPackage(new FileInfo(filePath)))
+            {
+                var worksheet = package.Workbook.Worksheets[0];
+                if (worksheet.Dimension == null) return records;
+
+                int rowCount = worksheet.Dimension.Rows;
+                int colCount = worksheet.Dimension.Columns;
+
+                var headerMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                for (int col = 1; col <= colCount; col++)
+                {
+                    var header = worksheet.Cells[1, col].Text.Trim();
+                    if (!string.IsNullOrEmpty(header))
+                    {
+                        headerMap[header] = col;
+                    }
+                }
+
+                string GetValue(int row, string headerName)
+                {
+                    if (headerMap.TryGetValue(headerName, out int colIndex))
+                    {
+                        return worksheet.Cells[row, colIndex].Text?.Trim() ?? "";
+                    }
+                    return "";
+                }
+
+                for (int row = 2; row <= rowCount; row++)
+                {
+                    var record = new ApplicationRecord
+                    {
+                        ApplicantID = GetValue(row, "Applicant ID"),
+                        Programme = GetValue(row, "Programme"),
+                        Forename = GetValue(row, "Forename"),
+                        Surname = GetValue(row, "Surname"),
+                        FeeStatus = GetValue(row, "Fee Status"),
+                        QualificationName = GetValue(row, "Qualification name"),
+                        DegreeSubject = GetValue(row, "Degree subject"),
+                        InstitutionName = GetValue(row, "Institution name"),
+                        CountryOfStudy = GetValue(row, "Country of study"),
+                        OverallGradeGPA = GetValue(row, "Overall  grade/GPA"),
+                        EquivalencyNote = GetValue(row, "Equivalency note"),
+                        GradeAchievedPending = GetValue(row, "Grade Achieved/Pending")
+                    };
+                    records.Add(record);
+                }
+            }
+
+            return records;
+        }
         
-        public string GenerateOutputFiles(List<OutputRecord> data, string outputFolderPath)
+        public List<string> GenerateOutputFiles(List<OutputRecord> data, string outputFolderPath)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             
@@ -103,7 +220,6 @@ namespace ADMerger.Services
                 {
                     var worksheet = package.Workbook.Worksheets.Add(programme);
                     
-                    // Write headers with neutral styling
                     for (int col = 0; col < ColumnOrder.Count; col++)
                     {
                         var headerCell = worksheet.Cells[1, col + 1];
@@ -116,7 +232,6 @@ namespace ADMerger.Services
                         headerCell.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     }
                     
-                    // Write data
                     int row = 2;
                     foreach (var record in records)
                     {
@@ -131,10 +246,7 @@ namespace ADMerger.Services
                                 "Programme" => record.Programme ?? "",
                                 "Forename" => record.Forename ?? "",
                                 "Surname" => record.Surname ?? "",
-                                "Gender" => record.Gender ?? "",
-                                "DateOfBirth" => record.DateOfBirth ?? "",
                                 "FeeStatus" => record.FeeStatus ?? "",
-                                "CountryOfNationality" => record.CountryOfNationality ?? "",
                                 "QualificationName" => record.QualificationName ?? "",
                                 "DegreeSubject" => record.DegreeSubject ?? "",
                                 "InstitutionName" => record.InstitutionName ?? "",
@@ -149,7 +261,6 @@ namespace ADMerger.Services
                             
                             var cell = worksheet.Cells[row, col + 1];
                             
-                            // Apply alignment
                             if (RightAlignedColumns.Contains(columnName))
                             {
                                 cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
@@ -159,14 +270,12 @@ namespace ADMerger.Services
                                 cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
                             }
                             
-                            // Apply specific formats
                             if (columnName == "StudentNo")
                             {
-                                // Store as number to avoid "stored as text" warning
                                 if (long.TryParse(value, out long studentNoValue))
                                 {
                                     cell.Value = studentNoValue;
-                                    cell.Style.Numberformat.Format = "0"; // Whole number, no decimals
+                                    cell.Style.Numberformat.Format = "0";
                                 }
                                 else
                                 {
@@ -175,19 +284,11 @@ namespace ADMerger.Services
                             }
                             else if (columnName == "THERanking")
                             {
-                                // Store as text
-                                cell.Style.Numberformat.Format = "@";
-                                cell.Value = value;
-                            }
-                            else if (columnName == "Gender")
-                            {
-                                // Text format
                                 cell.Style.Numberformat.Format = "@";
                                 cell.Value = value;
                             }
                             else if (DateColumns.Contains(columnName) && !string.IsNullOrWhiteSpace(value))
                             {
-                                // Date format
                                 if (DateTime.TryParse(value, out DateTime dateValue))
                                 {
                                     cell.Value = dateValue;
@@ -200,10 +301,9 @@ namespace ADMerger.Services
                             }
                             else if (columnName == "OverallGradeGPA" && !string.IsNullOrWhiteSpace(value))
                             {
-                                // Percentage format
                                 if (double.TryParse(value.Replace("%", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out double percentValue))
                                 {
-                                    cell.Value = percentValue / 100.0; // Excel percentages are 0-1
+                                    cell.Value = percentValue / 100.0;
                                     cell.Style.Numberformat.Format = "0%";
                                 }
                                 else
@@ -213,7 +313,6 @@ namespace ADMerger.Services
                             }
                             else if (columnName == "UKGrade" && !string.IsNullOrWhiteSpace(value))
                             {
-                                // Number format with 1 decimal place
                                 if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out double gradeValue))
                                 {
                                     cell.Value = gradeValue;
@@ -232,20 +331,17 @@ namespace ADMerger.Services
                         row++;
                     }
                     
-                    // Suppress "number stored as text" warnings for THERanking column
                     int theRankingCol = ColumnOrder.IndexOf("THERanking") + 1;
-                    if (row > 2) // Only if we have data rows
+                    if (row > 2)
                     {
                         var theRankingRange = worksheet.Cells[2, theRankingCol, row - 1, theRankingCol];
                         var ignoredError = worksheet.IgnoredErrors.Add(theRankingRange);
                         ignoredError.NumberStoredAsText = true;
                     }
                     
-                    // Auto-fit columns with custom widths
                     for (int col = 1; col <= ColumnOrder.Count; col++)
                     {
                         string columnName = ColumnOrder[col - 1];
-                        
                         if (columnName == "EquivalencyNote")
                         {
                             worksheet.Column(col).Width = 18;
@@ -266,7 +362,7 @@ namespace ADMerger.Services
                 outputPaths.Add(outputPath);
             }
             
-            return string.Join("\n", outputPaths);
+            return outputPaths;
         }
         
         private DateTime ParseDate(string dateString)

@@ -1,0 +1,210 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ADMerger.Views.MainWindow"
+        Title="ADMerger - UCL Admissions Data Processor"
+        Width="1000" Height="700"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F7FA">
+    
+    <Grid RowDefinitions="Auto,*,Auto">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#1E3A5F" Padding="30,20">
+            <StackPanel>
+                <TextBlock Text="ADMerger" 
+                           Foreground="White" 
+                           FontSize="28" 
+                           FontWeight="Bold"/>
+                <TextBlock x:Name="VersionLabel"
+                           Text="UCL Admissions Data Processor" 
+                           Foreground="#87CEEB" 
+                           FontSize="14" 
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" Padding="30">
+            <StackPanel Spacing="20">
+                
+                <!-- Document 1: InTray File -->
+                <Border Background="White" 
+                        CornerRadius="8" 
+                        Padding="20"
+                        BoxShadow="0 2 8 0 #10000000">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="📄 Document 1: InTray File" 
+                                   FontWeight="SemiBold" 
+                                   FontSize="16"
+                                   Foreground="#2D3748"/>
+                        <TextBlock Text="Exported new applicants from UCL Select" 
+                                   Foreground="#718096"
+                                   FontSize="13"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button x:Name="BrowseInTrayButton"
+                                    Content="📁 Browse"
+                                    Padding="15,10"
+                                    Background="#4299E1"
+                                    Foreground="White"
+                                    CornerRadius="4"
+                                    FontWeight="Medium"/>
+                            <TextBlock x:Name="InTrayFileLabel"
+                                       Text="No file selected"
+                                       VerticalAlignment="Center"
+                                       Foreground="#718096"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Document 2: Application Reports -->
+                <Border Background="White" 
+                        CornerRadius="8" 
+                        Padding="20"
+                        BoxShadow="0 2 8 0 #10000000">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="📄 Document 2: Application Reports" 
+                                   FontWeight="SemiBold" 
+                                   FontSize="16"
+                                   Foreground="#2D3748"/>
+                        <TextBlock Text="Department Application Reports from UCL Select" 
+                                   Foreground="#718096"
+                                   FontSize="13"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button x:Name="BrowseAppReportsButton"
+                                    Content="📁 Browse"
+                                    Padding="15,10"
+                                    Background="#4299E1"
+                                    Foreground="White"
+                                    CornerRadius="4"
+                                    FontWeight="Medium"/>
+                            <TextBlock x:Name="AppReportsFileLabel"
+                                       Text="No file selected"
+                                       VerticalAlignment="Center"
+                                       Foreground="#718096"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Output Folder -->
+                <Border Background="White" 
+                        CornerRadius="8" 
+                        Padding="20"
+                        BoxShadow="0 2 8 0 #10000000">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="📂 Output Folder" 
+                                   FontWeight="SemiBold" 
+                                   FontSize="16"
+                                   Foreground="#2D3748"/>
+                        <TextBlock Text="Where to save the generated Excel files" 
+                                   Foreground="#718096"
+                                   FontSize="13"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button x:Name="BrowseOutputButton"
+                                    Content="📁 Browse"
+                                    Padding="15,10"
+                                    Background="#4299E1"
+                                    Foreground="White"
+                                    CornerRadius="4"
+                                    FontWeight="Medium"/>
+                            <TextBlock x:Name="OutputFolderLabel"
+                                       Text="No folder selected"
+                                       VerticalAlignment="Center"
+                                       Foreground="#718096"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Process Button -->
+                <Border Background="White" 
+                        CornerRadius="8" 
+                        Padding="20"
+                        BoxShadow="0 2 8 0 #10000000">
+                    <StackPanel Spacing="15">
+                        <Button x:Name="ProcessButton"
+                                Content="Process and Generate Excel Files"
+                                Padding="20,15"
+                                Background="#48BB78"
+                                Foreground="White"
+                                CornerRadius="6"
+                                FontWeight="SemiBold"
+                                FontSize="16"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                IsEnabled="False"/>
+                        <TextBlock x:Name="StatusLabel"
+                                   Text="Load both files to begin"
+                                   Foreground="#718096"
+                                   TextAlignment="Center"
+                                   FontSize="13"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Status Log -->
+                <Border Background="White" 
+                        CornerRadius="8" 
+                        Padding="20"
+                        BoxShadow="0 2 8 0 #10000000">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Status Log" 
+                                       FontWeight="SemiBold" 
+                                       FontSize="14"
+                                       Foreground="#2D3748"/>
+                            <Button x:Name="ClearLogButton"
+                                    Grid.Column="1"
+                                    Content="Clear"
+                                    Padding="10,5"
+                                    Background="#6C757D"
+                                    Foreground="White"
+                                    CornerRadius="4"
+                                    FontSize="12"/>
+                        </Grid>
+                        <TextBox x:Name="StatusLog"
+                               Height="150"
+                               IsReadOnly="True"
+                               AcceptsReturn="True"
+                               TextWrapping="Wrap"
+                               Background="#F7FAFC"
+                               BorderBrush="#E2E8F0"
+                               Padding="12"
+                               FontFamily="Consolas, Monaco, monospace"
+                               FontSize="11"
+                               Foreground="#4A5568"/>
+                    </StackPanel>
+                </Border>
+                
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Footer -->
+        <Border Grid.Row="2" 
+                Background="White" 
+                BorderThickness="0,1,0,0"
+                BorderBrush="#E2E8F0"
+                Padding="30,15">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock x:Name="FooterStatus" 
+                           Text="Ready to process" 
+                           Foreground="#718096"
+                           VerticalAlignment="Center"
+                           FontSize="13"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                    <Button x:Name="ResetButton"
+                            Content="🔄 Reset"
+                            Padding="15,8"
+                            Background="#6C757D"
+                            Foreground="White"
+                            CornerRadius="4"
+                            FontWeight="Medium"/>
+                    <Button x:Name="ExitButton"
+                            Content="Exit"
+                            Padding="15,8"
+                            Background="#343A40"
+                            Foreground="White"
+                            CornerRadius="4"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        
+    </Grid>
+</Window>

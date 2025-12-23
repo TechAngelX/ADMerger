@@ -1,33 +1,19 @@
 ﻿// Program.cs
 
+using Avalonia;
 using System;
-using System.Windows.Forms;
-using ADMerger.Services;
 
-namespace ADMerger
+namespace ADMerger;
+
+class Program
 {
-    internal class Program
-    {
-        [STAThread]
-        static void Main()
-        {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            
-            var csvService = new CsvService();
-            var equivalencyService = new EquivalencyService();
-            var matchingService = new InstitutionMatchingService();
-            var rankingService = new RankingService(matchingService);
-            var gradeService = new GradeClassificationService(equivalencyService);
-            
-            var mainForm = new MainForm(
-                csvService,
-                equivalencyService,
-                rankingService,
-                gradeService
-            );
-            
-            Application.Run(mainForm);
-        }
-    }
+    [STAThread]
+    public static void Main(string[] args) => BuildAvaloniaApp()
+        .StartWithClassicDesktopLifetime(args);
+
+    public static AppBuilder BuildAvaloniaApp()
+        => AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .WithInterFont()
+            .LogToTrace();
 }
