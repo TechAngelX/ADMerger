@@ -19,10 +19,10 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using System.Diagnostics; 
 
 namespace ADMerger.Views;
 
-// UPDATED ProcessingItem
 public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
 {
     public string? StudentNo { get; set; }
@@ -56,19 +56,19 @@ public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
     {
         string s = Status.ToLower();
         if (s.Contains("done") || s.Contains("success")) {
-            StatusColor = SolidColorBrush.Parse("#D1FAE5"); // Green
+            StatusColor = SolidColorBrush.Parse("#D1FAE5");
             StatusForeColor = SolidColorBrush.Parse("#059669");
         }
         else if (s.Contains("processing")) {
-             StatusColor = SolidColorBrush.Parse("#DBEAFE"); // Blue
+             StatusColor = SolidColorBrush.Parse("#DBEAFE");
              StatusForeColor = SolidColorBrush.Parse("#2563EB");
         }
         else if (s.Contains("error") || s.Contains("missing") || s.Contains("stopped")) {
-             StatusColor = SolidColorBrush.Parse("#FEE2E2"); // Red
+             StatusColor = SolidColorBrush.Parse("#FEE2E2");
              StatusForeColor = SolidColorBrush.Parse("#DC2626");
         }
         else {
-             StatusColor = SolidColorBrush.Parse("#F1F5F9"); // Gray
+             StatusColor = SolidColorBrush.Parse("#F1F5F9");
              StatusForeColor = SolidColorBrush.Parse("#64748B");
         }
         PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(StatusColor)));
@@ -445,7 +445,6 @@ public partial class MainWindow : Window
                         FooterStatus.Text = $"{current}/{total} Processed";
                     });
 
-                    // 50ms delay for visual effect
                     await Task.Delay(50);
                 }
 
@@ -470,22 +469,16 @@ public partial class MainWindow : Window
                     FooterStatus.Text = "Finished";
                     foreach (var path in outputPaths) LogStatus($"Generated: {Path.GetFileName(path)}");
                     
-                    // --- STATISTICS FIX ---
-                    // Explicitly count all categories to ensure the total sums up correctly.
                     int countFirst = outputRecords.Count(r => r.UKGrade == "1.0");
                     int countUpper = outputRecords.Count(r => r.UKGrade == "2.1");
                     int countLower = outputRecords.Count(r => r.UKGrade == "2.2");
                     int countThird = outputRecords.Count(r => r.UKGrade == "3.0");
-                    
-                    // "Other" captures Masters, N/A, Errors, or anything else
                     int countOther = outputRecords.Count - (countFirst + countUpper + countLower + countThird);
                     
-                    // Build the vertical list string
                     string summaryList = $"{countFirst}\t(First Class)\n" +
                                          $"{countUpper}\t(Upper Second)\n" +
                                          $"{countLower}\t(Lower Second)";
 
-                    // Append missing categories if they exist so the math works
                     if (countThird > 0) summaryList += $"\n{countThird}\t(Third Class)";
                     if (countOther > 0) summaryList += $"\n{countOther}\t(Other / Ungraded)";
 
@@ -575,10 +568,17 @@ public partial class MainWindow : Window
     
     private async System.Threading.Tasks.Task ShowMessageBoxAsync(string title, string message)
     {
+        var okButton = new Button { 
+            Content = "OK", 
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, 
+            Background = SolidColorBrush.Parse("#2563EB"), 
+            Foreground = Brushes.White 
+        };
+
         var win = new Window {
             Title = title, 
             Width = 500,        
-            Height = 350,       // INCREASED TO 350 FOR VERTICAL LIST
+            Height = 350,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             SystemDecorations = SystemDecorations.BorderOnly, 
             ExtendClientAreaToDecorationsHint = true,
@@ -589,12 +589,40 @@ public partial class MainWindow : Window
                     Children = {
                         new TextBlock { Text = title, FontWeight = FontWeight.Bold, FontSize = 18 },
                         new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
-                        new Button { Content = "OK", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Background = SolidColorBrush.Parse("#2563EB"), Foreground = Brushes.White }
+                        okButton
                     }
                 }
             }
         };
-        ((Button)((StackPanel)((Border)win.Content).Child).Children[2]).Click += (s, e) => win.Close();
+
+        okButton.Click += (s, e) => {
+            win.Close();
+            
+            if (title == "Success" && !string.IsNullOrEmpty(_outputFolderPath) && Directory.Exists(_outputFolderPath))
+            {
+                try
+                {
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        Process.Start(new ProcessStartInfo {
+                            FileName = _outputFolderPath,
+                            UseShellExecute = true,
+                            Verb = "open"
+                        });
+                    }
+                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    {
+                        Process.Start("open", $"\"{_outputFolderPath}\"");
+                    }
+                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    {
+                        Process.Start("xdg-open", $"\"{_outputFolderPath}\"");
+                    }
+                }
+                catch { }
+            }
+        };
+
         await win.ShowDialog(this);
     }
 }
