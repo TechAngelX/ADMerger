@@ -470,12 +470,26 @@ public partial class MainWindow : Window
                     FooterStatus.Text = "Finished";
                     foreach (var path in outputPaths) LogStatus($"Generated: {Path.GetFileName(path)}");
                     
-                    // --- UPDATED STATISTICS FORMAT ---
+                    // --- STATISTICS FIX ---
+                    // Explicitly count all categories to ensure the total sums up correctly.
                     int countFirst = outputRecords.Count(r => r.UKGrade == "1.0");
                     int countUpper = outputRecords.Count(r => r.UKGrade == "2.1");
                     int countLower = outputRecords.Count(r => r.UKGrade == "2.2");
+                    int countThird = outputRecords.Count(r => r.UKGrade == "3.0");
                     
-                    string summary = $"Processed {outputRecords.Count} records:\n\n{countFirst}\t(First Class)\n{countUpper}\t(Upper Second)\n{countLower}\t(Lower Second)";
+                    // "Other" captures Masters, N/A, Errors, or anything else
+                    int countOther = outputRecords.Count - (countFirst + countUpper + countLower + countThird);
+                    
+                    // Build the vertical list string
+                    string summaryList = $"{countFirst}\t(First Class)\n" +
+                                         $"{countUpper}\t(Upper Second)\n" +
+                                         $"{countLower}\t(Lower Second)";
+
+                    // Append missing categories if they exist so the math works
+                    if (countThird > 0) summaryList += $"\n{countThird}\t(Third Class)";
+                    if (countOther > 0) summaryList += $"\n{countOther}\t(Other / Ungraded)";
+
+                    string summary = $"Processed {outputRecords.Count} records:\n\n{summaryList}";
 
                     await ShowMessageBoxAsync("Success", 
                         $"Processing complete!\n\n{summary}\n\nExcel file(s) saved at:\n{_outputFolderPath}");
@@ -563,8 +577,8 @@ public partial class MainWindow : Window
     {
         var win = new Window {
             Title = title, 
-            Width = 500,        // UPDATED: Increased width to 500
-            Height = 300,       // UPDATED: Increased height to 300 to show button
+            Width = 500,        
+            Height = 350,       // INCREASED TO 350 FOR VERTICAL LIST
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             SystemDecorations = SystemDecorations.BorderOnly, 
             ExtendClientAreaToDecorationsHint = true,

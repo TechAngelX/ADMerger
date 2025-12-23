@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using ADMerger.Models;
 
@@ -12,11 +13,10 @@ namespace ADMerger.Services
     {
         private readonly IEquivalencyService _equivalencyService;
 
-        // Regex helpers
         private readonly Regex _fractionRegex = new Regex(@"(\d+(?:\.\d+)?)\s*(?:/|out of|of)\s*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
         private readonly Regex _percentRegex = new Regex(@"(\d+(?:\.\d+)?)%", RegexOptions.IgnoreCase);
-        // Pattern to find rules like "2.1: Bachelors @ 85%"
-        private readonly Regex _customThresholdRegex = new Regex(@"(1st|2\.1|2\.2|3rd)[^@]*@\s*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
+        private readonly Regex _customThresholdRegex = new Regex(@"(1st|2\.1|2\.2|3rd)[^@_]*@\s*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
+        private readonly Regex _explicitGradeRegex = new Regex(@"(?:grade|gpa|average)[^0-9_]*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
 
         public GradeClassificationService(IEquivalencyService equivalencyService)
         {
@@ -25,71 +25,56 @@ namespace ADMerger.Services
         
         public string DetermineUKClassification(string overallGradeGPA, string equivalencyNote, string countryOfStudy, string qualificationName)
         {
-            // ---------------------------------------------------------
-            // 1. MASTERS CHECK (With "Integrated Masters" Sanity Check)
-            // ---------------------------------------------------------
             if (!string.IsNullOrWhiteSpace(qualificationName) && 
                 qualificationName.Contains("Masters", StringComparison.OrdinalIgnoreCase))
             {
-                // SANITY CHECK: 
-                // If the note says "2:1" or "First Class", it is likely an Integrated Masters (MEng/MSci).
-                // In this case, we ABANDON the Masters logic and treat it as a normal Undergraduate degree.
                 if (!DoesNoteLookLikeUndergrad(equivalencyNote))
                 {
-                    // It's a real Postgraduate Masters -> Just return "Masters"
                     return "Masters";
                 }
             }
 
-            // ---------------------------------------------------------
-            // 2. UK UNDERGRADUATE LOGIC
-            // ---------------------------------------------------------
             if (IsUK(countryOfStudy))
             {
-                return DetermineDomesticGrade(overallGradeGPA, equivalencyNote);
+                return DetermineDomesticGrade(equivalencyNote);
             }
 
-            // ---------------------------------------------------------
-            // 3. INTERNATIONAL LOGIC
-            // ---------------------------------------------------------
-            
-            // Step A: Get a raw number (from Grade column or Notes)
-            double? studentGrade = ExtractGradeValue(overallGradeGPA) ?? ExtractGradeValue(equivalencyNote);
+            double? studentGrade = ExtractGradeValue(equivalencyNote);
 
             if (studentGrade.HasValue)
             {
-                // Step B: Check for explicit rules in the text (e.g. "2.1 @ 85%")
                 var customThresholds = ParseCustomThresholdsFromNote(equivalencyNote);
                 if (customThresholds.Count > 0)
                 {
-                    double normalized = GuessScaleAndNormalize(studentGrade.Value);
-                    return ApplyCustomThresholds(normalized, customThresholds);
+                    bool rulesArePercent = customThresholds.Values.Any(v => v > 10.0);
+                    double gradeToTest = studentGrade.Value;
+
+                    if (rulesArePercent)
+                    {
+                        gradeToTest = GuessScaleAndNormalize(studentGrade.Value);
+                    }
+
+                    return ApplyCustomThresholds(gradeToTest, customThresholds);
                 }
 
-                // Step C: Check the Country Database (e.g. Austria logic)
                 var equiv = _equivalencyService.GetEquivalency(countryOfStudy);
                 if (equiv != null)
                 {
                     return ApplySmartEquivalency(studentGrade.Value, equiv);
                 }
                 
-                // Step D: Fallback (Standard 0-100 scale)
                 double stdNormalized = GuessScaleAndNormalize(studentGrade.Value);
                 return ApplyStandardThresholds(stdNormalized);
             }
 
-            // Step E: Last Resort - Look for keywords ("Distinction", "Merit")
             return DetermineClassificationFromTextKeywords(equivalencyNote);
         }
-
-        // --- HELPER LOGIC ---
 
         private bool DoesNoteLookLikeUndergrad(string note)
         {
             if (string.IsNullOrWhiteSpace(note)) return false;
             string lower = note.ToLowerInvariant();
             
-            // If these terms appear, use 1st/2:1 logic, NOT the "Masters" label
             return lower.Contains("2:1") || lower.Contains("2.1") || 
                    lower.Contains("2:2") || lower.Contains("2.2") ||
                    lower.Contains("1st") || lower.Contains("first class") ||
@@ -106,10 +91,9 @@ namespace ADMerger.Services
                    country.Contains("Wales", StringComparison.OrdinalIgnoreCase);
         }
 
-        private string DetermineDomesticGrade(string grade, string note)
+        private string DetermineDomesticGrade(string note)
         {
-            // 1. Check Numbers (Most accurate for UK)
-            double? numericGrade = ExtractGradeValue(grade) ?? ExtractGradeValue(note);
+            double? numericGrade = ExtractGradeValue(note);
             
             if (numericGrade.HasValue)
             {
@@ -119,10 +103,6 @@ namespace ADMerger.Services
                 if (val >= 50.0) return "2.2";
                 if (val >= 40.0) return "3.0";
             }
-
-            // 2. Check Text Keywords
-            string textResult = ParseUKGradeText(grade);
-            if (textResult != "??") return textResult;
 
             return ParseUKGradeText(note);
         }
@@ -149,7 +129,6 @@ namespace ADMerger.Services
 
         private string ApplyCustomThresholds(double grade, Dictionary<string, double> thresholds)
         {
-            // Custom rules usually imply "Higher is Better"
             if (thresholds.ContainsKey("1.0") && grade >= thresholds["1.0"]) return "1.0";
             if (thresholds.ContainsKey("2.1") && grade >= thresholds["2.1"]) return "2.1";
             if (thresholds.ContainsKey("2.2") && grade >= thresholds["2.2"]) return "2.2";
@@ -165,7 +144,6 @@ namespace ADMerger.Services
 
             if (!t1st.HasValue || !t22.HasValue) return "??";
 
-            // CHECK DIRECTION: Is this a "Reverse Scale" country? (e.g. Austria)
             bool lowerIsBetter = t1st.Value < t22.Value;
 
             if (lowerIsBetter)
@@ -188,10 +166,14 @@ namespace ADMerger.Services
         {
             if (string.IsNullOrWhiteSpace(text)) return null;
             
-            // Clean specific garbage from your file (<, ', etc)
             text = text.Trim().Replace("'", "").Replace("<", "");
 
-            // 1. Try "X / Y"
+            var explicitMatch = _explicitGradeRegex.Match(text);
+            if (explicitMatch.Success && double.TryParse(explicitMatch.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double extracted))
+            {
+                return extracted;
+            }
+
             var fraction = _fractionRegex.Match(text);
             if (fraction.Success && 
                 double.TryParse(fraction.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double num) &&
@@ -201,21 +183,12 @@ namespace ADMerger.Services
                 return num; 
             }
 
-            // 2. Try "%"
             var percent = _percentRegex.Match(text);
             if (percent.Success && double.TryParse(percent.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double pVal))
             {
                 return pVal;
             }
 
-            // 3. Try "current grade of 90.26"
-            var currentGradeMatch = Regex.Match(text, @"(?:grade|gpa|average)[^0-9]*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
-            if (currentGradeMatch.Success && double.TryParse(currentGradeMatch.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double extracted))
-            {
-                return extracted;
-            }
-
-            // 4. Try raw number
             if (double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out double val))
             {
                 return val;
@@ -226,7 +199,7 @@ namespace ADMerger.Services
 
         private double GuessScaleAndNormalize(double grade)
         {
-            if (grade > 20) return grade; // Already %
+            if (grade > 20) return grade;
             if (grade <= 4.0) return (grade / 4.0) * 100.0;
             if (grade <= 5.0) return (grade / 5.0) * 100.0;
             if (grade <= 10.0) return (grade / 10.0) * 100.0;
@@ -246,7 +219,6 @@ namespace ADMerger.Services
             if (string.IsNullOrWhiteSpace(text)) return "??";
             string lower = text.ToLowerInvariant();
 
-            // Ignore "2.1" if it's part of a rule string like "2.1 @ 85%"
             if (lower.Contains("@")) return "??"; 
 
             if (lower.Contains("first class") || lower.Contains("1st class")) return "1.0";
@@ -261,8 +233,7 @@ namespace ADMerger.Services
             return "??";
         }
 
-        // Interface compatibility
         public string ParseUKGradeText(string t) => DetermineClassificationFromTextKeywords(t);
         public double? ParseGradeValue(string s) => ExtractGradeValue(s);
     }
-}
+}   
