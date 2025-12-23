@@ -22,14 +22,13 @@ using System.Runtime.InteropServices;
 
 namespace ADMerger.Views;
 
-// UPDATED ProcessingItem to support separate Status vs UK Grade
+// UPDATED ProcessingItem
 public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
 {
     public string? StudentNo { get; set; }
     public string? Name { get; set; }
     public string? ReceivedDate { get; set; }
     
-    // === STATUS COLUMN (Progress) ===
     private string _status = "Pending";
     public string Status 
     { 
@@ -40,8 +39,7 @@ public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
     public IBrush StatusColor { get; private set; } = Brushes.Transparent;
     public IBrush StatusForeColor { get; private set; } = Brushes.Gray;
 
-    // === UK GRADE COLUMN (Results) ===
-    private string _ukGrade = ""; // Empty by default
+    private string _ukGrade = ""; 
     public string UkGrade
     {
         get => _ukGrade;
@@ -59,19 +57,19 @@ public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
         string s = Status.ToLower();
         if (s.Contains("done") || s.Contains("success")) {
             StatusColor = SolidColorBrush.Parse("#D1FAE5"); // Green
-            StatusForeColor = SolidColorBrush.Parse("#059669"); 
+            StatusForeColor = SolidColorBrush.Parse("#059669");
         }
         else if (s.Contains("processing")) {
              StatusColor = SolidColorBrush.Parse("#DBEAFE"); // Blue
-             StatusForeColor = SolidColorBrush.Parse("#2563EB"); 
+             StatusForeColor = SolidColorBrush.Parse("#2563EB");
         }
         else if (s.Contains("error") || s.Contains("missing") || s.Contains("stopped")) {
              StatusColor = SolidColorBrush.Parse("#FEE2E2"); // Red
-             StatusForeColor = SolidColorBrush.Parse("#DC2626"); 
+             StatusForeColor = SolidColorBrush.Parse("#DC2626");
         }
         else {
              StatusColor = SolidColorBrush.Parse("#F1F5F9"); // Gray
-             StatusForeColor = SolidColorBrush.Parse("#64748B"); 
+             StatusForeColor = SolidColorBrush.Parse("#64748B");
         }
         PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(StatusColor)));
         PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(StatusForeColor)));
@@ -82,37 +80,31 @@ public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
         string g = UkGrade.ToLower();
         GradeWeight = FontWeight.Bold;
         
-        // 1. High Achievement (1st, Distinction) -> Emerald Green
         if (g.Contains("1.0") || g.Contains("1st") || g.Contains("distinction")) 
         {
-            GradeColor = SolidColorBrush.Parse("#D1FAE5"); 
+            GradeColor = SolidColorBrush.Parse("#D1FAE5");
             GradeForeColor = SolidColorBrush.Parse("#059669"); 
         }
-        // 2. Good (2.1, Merit) -> Blue
         else if (g.Contains("2.1") || g.Contains("2:1") || g.Contains("merit")) 
         {
-            GradeColor = SolidColorBrush.Parse("#DBEAFE"); 
+            GradeColor = SolidColorBrush.Parse("#DBEAFE");
             GradeForeColor = SolidColorBrush.Parse("#2563EB"); 
         }
-        // 3. Okay (2.2, Pass) -> Orange/Amber
         else if (g.Contains("2.2") || g.Contains("2:2") || g.Contains("pass")) 
         {
-            GradeColor = SolidColorBrush.Parse("#FEF3C7"); 
+            GradeColor = SolidColorBrush.Parse("#FEF3C7");
             GradeForeColor = SolidColorBrush.Parse("#D97706"); 
         }
-        // 4. Low (3.0, Third) -> Rose/Red
         else if (g.Contains("3.0") || g.Contains("3rd")) 
         {
-            GradeColor = SolidColorBrush.Parse("#FFE4E6"); 
+            GradeColor = SolidColorBrush.Parse("#FFE4E6");
             GradeForeColor = SolidColorBrush.Parse("#E11D48"); 
         }
-        // 5. Masters (Generic) -> Violet/Purple
         else if (g.Contains("masters")) 
         {
-            GradeColor = SolidColorBrush.Parse("#EDE9FE"); 
+            GradeColor = SolidColorBrush.Parse("#EDE9FE");
             GradeForeColor = SolidColorBrush.Parse("#7C3AED"); 
         }
-        // Default -> Transparent/Black
         else 
         {
             GradeColor = Brushes.Transparent;
@@ -140,7 +132,6 @@ public partial class MainWindow : Window
 
     private CancellationTokenSource? _cancellationTokenSource;
     private bool _isProcessing = false;
-
     public ObservableCollection<ProcessingItem> ProcessingItems { get; set; } = new ObservableCollection<ProcessingItem>();
 
     [DllImport("winmm.dll")]
@@ -150,13 +141,11 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         ProcessingList.ItemsSource = ProcessingItems;
-
         _csvService = new CsvService();
         _equivalencyService = new EquivalencyService();
         _matchingService = new InstitutionMatchingService();
         _rankingService = new RankingService(_matchingService);
         _gradeService = new GradeClassificationService(_equivalencyService);
-        
         LoadRankingsAndEquivalencies();
         SetVersion();
         
@@ -282,7 +271,7 @@ public partial class MainWindow : Window
                 if (records.Count > 50) LogStatus($"...and {records.Count - 50} more records.");
                 EmptyStatePanel.IsVisible = false;
                 FooterStatus.Text = $"{records.Count} Records waiting";
-                StatusLabel.Foreground = Brushes.Black; 
+                StatusLabel.Foreground = Brushes.Black;
             } catch { }
         }
     }
@@ -298,6 +287,7 @@ public partial class MainWindow : Window
             AllowMultiple = false,
             FileTypeFilter = new[] { new FilePickerFileType("Excel or CSV") { Patterns = new[] { "*.xlsx", "*.csv" } } }
         });
+
         if (files.Count > 0)
         {
             var path = files[0].Path.LocalPath;
@@ -312,7 +302,7 @@ public partial class MainWindow : Window
             AppReportsFileLabel.Text = Path.GetFileName(_appReportsFilePath);
             LogStatus($"Selected App Reports: {Path.GetFileName(_appReportsFilePath)}");
             CheckReadyToProcess();
-            StatusLabel.Foreground = Brushes.Black; 
+            StatusLabel.Foreground = Brushes.Black;
         }
     }
     
@@ -399,7 +389,6 @@ public partial class MainWindow : Window
                     }
 
                     current++;
-                    
                     var studentNo = inTray.StudentNo?.Trim();
                     var app = appRecords.FirstOrDefault(a => a.ApplicantID?.Trim() == studentNo);
 
@@ -414,11 +403,10 @@ public partial class MainWindow : Window
                     else
                     {
                         var programmeCode = ProgrammeMapping.GetCode(app.Programme ?? "");
-                        
                         var ukGrade = _gradeService.DetermineUKClassification(
                             app.OverallGradeGPA ?? "", 
                             app.EquivalencyNote ?? "", 
-                            app.CountryOfStudy ?? "",
+                            app.CountryOfStudy ?? "", 
                             app.QualificationName ?? "");
 
                         var theRanking = _rankingService.GetRanking(app.InstitutionName ?? "");
@@ -442,7 +430,6 @@ public partial class MainWindow : Window
                             DegreeStatus = app.GradeAchievedPending,
                             UKGrade = ukGrade
                         });
-
                         newStatus = "✓ Done";
                         newGrade = ukGrade;
                     }
@@ -459,7 +446,7 @@ public partial class MainWindow : Window
                     });
 
                     // 50ms delay for visual effect
-                    await Task.Delay(50); 
+                    await Task.Delay(50);
                 }
 
                 if (outputRecords.Count == 0)
@@ -477,15 +464,21 @@ public partial class MainWindow : Window
                 var outputPaths = _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
                 
                 PlaySuccessSound();
-
                 await Dispatcher.UIThread.InvokeAsync(async () => {
                     StatusLabel.Text = "Complete!";
                     MainProgressBar.Value = 100;
                     FooterStatus.Text = "Finished";
                     foreach (var path in outputPaths) LogStatus($"Generated: {Path.GetFileName(path)}");
                     
+                    // --- UPDATED STATISTICS FORMAT ---
+                    int countFirst = outputRecords.Count(r => r.UKGrade == "1.0");
+                    int countUpper = outputRecords.Count(r => r.UKGrade == "2.1");
+                    int countLower = outputRecords.Count(r => r.UKGrade == "2.2");
+                    
+                    string summary = $"Processed {outputRecords.Count} records:\n\n{countFirst}\t(First Class)\n{countUpper}\t(Upper Second)\n{countLower}\t(Lower Second)";
+
                     await ShowMessageBoxAsync("Success", 
-                        $"Processing complete!\n\nExcel file(s) saved at:\n{_outputFolderPath}");
+                        $"Processing complete!\n\n{summary}\n\nExcel file(s) saved at:\n{_outputFolderPath}");
                 });
             }, token); 
         }
@@ -569,8 +562,12 @@ public partial class MainWindow : Window
     private async System.Threading.Tasks.Task ShowMessageBoxAsync(string title, string message)
     {
         var win = new Window {
-            Title = title, Width = 400, Height = 200, WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SystemDecorations = SystemDecorations.BorderOnly, ExtendClientAreaToDecorationsHint = true,
+            Title = title, 
+            Width = 500,        // UPDATED: Increased width to 500
+            Height = 300,       // UPDATED: Increased height to 300 to show button
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            SystemDecorations = SystemDecorations.BorderOnly, 
+            ExtendClientAreaToDecorationsHint = true,
             Content = new Border {
                 BorderBrush = Brushes.Gray, BorderThickness = new Thickness(1), Padding = new Thickness(20),
                 Child = new StackPanel {
