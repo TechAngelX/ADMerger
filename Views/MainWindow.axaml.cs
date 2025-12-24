@@ -2,7 +2,7 @@
 
 using Avalonia; using Avalonia.Controls; using Avalonia.Interactivity; using Avalonia.Platform.Storage; using Avalonia.Threading; using Avalonia.Media; using System.Collections.ObjectModel; using ADMerger.Services; using ADMerger.Models; using ADMerger.Configuration;
 
-using ADMerger.Utilities; using System; using System.Collections.Generic; using System.IO; using System.Linq; using System.Reflection; using System.Threading; using System.Threading.Tasks; using System.Runtime.InteropServices; using System.Diagnostics; using System.ComponentModel;
+using ADMerger.Utilities; using System; using System.Collections.Generic; using System.IO; using System.Linq; using System.Reflection; using System.Threading; using System.Threading.Tasks; using System.Runtime.InteropServices; using System.Diagnostics; using System.ComponentModel; using System.Text;
 
 namespace ADMerger.Views;
 
@@ -79,7 +79,7 @@ private bool _rankingsLoaded = false;
 public ObservableCollection<ProcessingItem> ProcessingItems { get; set; } = new ObservableCollection<ProcessingItem>();
 
 [DllImport("winmm.dll")]
-private static extern long mciSendString(string strCommand, System.Text.StringBuilder? strReturn, int iReturnLength, IntPtr hwndCallback);
+private static extern long mciSendString(string strCommand, StringBuilder? strReturn, int iReturnLength, IntPtr hwndCallback);
 
 public MainWindow()
 {
@@ -238,12 +238,13 @@ private async void ProcessButton_Click(object? sender, RoutedEventArgs e)
                 });
             }
 
-            var outputPaths = _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
+            _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
 
             if (!token.IsCancellationRequested)
             {
                 await Dispatcher.UIThread.InvokeAsync(async () => {
                     PlayConfirmationSound();
+                    
                     int countFirst = outputRecords.Count(r => r.UKGrade == "1.0");
                     int countUpper = outputRecords.Count(r => r.UKGrade == "2.1");
                     int countLower = outputRecords.Count(r => r.UKGrade == "2.2");
@@ -315,7 +316,6 @@ private void PlayConfirmationSound()
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            // Fallback to absolute dev path if local bin folder is empty during dev
             if (!File.Exists(soundPath))
                 soundPath = "/Users/xeon2035/Documents/LOCALDEV/admerger/audio/confirmed.mp3";
 
@@ -339,7 +339,7 @@ private void PlayConfirmationSound()
             }
         }
     }
-    catch { /* Audio failed, but don't crash the app */ }
+    catch { }
 }
 
 private void LogStatus(string message) => Dispatcher.UIThread.Post(() => StatusLog.Text += $"[{DateTime.Now:HH:mm:ss}] {message}\n");

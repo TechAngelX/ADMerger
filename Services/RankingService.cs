@@ -1,130 +1,47 @@
-﻿// Services/RankingService.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using OfficeOpenXml;
+using System.Linq;
 
 namespace ADMerger.Services
 {
     public class RankingService : IRankingService
     {
-        private readonly Dictionary<string, string> _rankings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        private readonly List<string> _institutionNames = new List<string>();
-        private readonly Dictionary<string, string> _institutionMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private readonly IInstitutionMatchingService _matchingService;
-        
-        public int Count => _rankings.Count;
-        
+        private List<string> _institutionNames = new();
+
+        public int Count => RankingData.Rankings.Count;
+
         public RankingService(IInstitutionMatchingService matchingService)
         {
-            _matchingService = matchingService ?? throw new ArgumentNullException(nameof(matchingService));
+            _matchingService = matchingService;
         }
-        
+
         public async Task LoadRankingsAsync()
         {
-            await Task.Run(() => 
-            {
-                _rankings.Clear();
-                _institutionNames.Clear();
-                LoadInstitutionMappings();
-                
-                try
-                {
-                    string excelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "THE Ranking 2026.xlsx");
-                    
-                    if (!File.Exists(excelPath))
-                    {
-                        excelPath = Path.Combine(Directory.GetCurrentDirectory(), "data", "THE Ranking 2026.xlsx");
-                    }
-
-                    if (File.Exists(excelPath))
-                    {
-                        using (var stream = File.OpenRead(excelPath))
-                        using (var package = new ExcelPackage(stream))
-                        {
-                            var worksheet = package.Workbook.Worksheets[0]; 
-                            
-                            if (worksheet.Dimension != null)
-                            {
-                                int totalRows = worksheet.Dimension.Rows;
-                                for (int row = 2; row <= totalRows; row++)
-                                {
-                                    var rankCell = worksheet.Cells[row, 1].Value;
-                                    var nameCell = worksheet.Cells[row, 2].Value;
-                                    
-                                    if (rankCell != null && nameCell != null)
-                                    {
-                                        string rank = rankCell.ToString().Trim();
-                                        string institutionName = nameCell.ToString().Trim();
-                                        
-                                        if (!string.IsNullOrWhiteSpace(institutionName))
-                                        {
-                                            _rankings[institutionName] = rank;
-                                            _institutionNames.Add(institutionName);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Ranking Load Error: {ex.Message}");
-                }
+            await Task.Run(() => {
+                _institutionNames = RankingData.Rankings.Keys.ToList();
             });
         }
-        
+
         public string GetRanking(string institutionName)
         {
             if (string.IsNullOrWhiteSpace(institutionName)) return "NR";
-            
-            institutionName = NormalizeAbbreviations(institutionName);
-            
-            if (_rankings.ContainsKey(institutionName))
-            {
-                return CleanRankingText(_rankings[institutionName]);
-            }
-            
-            string bestMatch = _matchingService.FindBestMatch(institutionName, _institutionNames);
-            if (bestMatch != null)
-            {
-                return CleanRankingText(_rankings[bestMatch]);
-            }
-            
-            return "NR";
-        }
-        
-        private string CleanRankingText(string ranking)
-        {
-            if (string.IsNullOrWhiteSpace(ranking)) return "NR";
-            return ranking.Replace(char.ConvertFromUtf32(0x2013), "-").Replace(char.ConvertFromUtf32(0x2014), "-");
-        }
-        
-        private void LoadInstitutionMappings()
-        {
-            try
-            {
-                string csvPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "institution_mappings.csv");
-                if (!File.Exists(csvPath)) return;
 
-                var lines = File.ReadAllLines(csvPath);
-                foreach (var line in lines.Skip(1))
-                {
-                    var parts = line.Split(',');
-                    if (parts.Length >= 2) _institutionMappings[parts[0].Trim()] = parts[1].Trim();
-                }
+            // 1. Apply Mappings first (e.g., convert "UCL" to "University College London")
+            string normalizedName = institutionName.Trim();
+            if (MappingData.InstitutionMappings.TryGetValue(normalizedName, out string? mappedName))
+            {
+                normalizedName = mappedName;
             }
-            catch { }
-        }
-        
-        private string NormalizeAbbreviations(string institutionName)
-        {
-            if (_institutionMappings.TryGetValue(institutionName, out string mappedName)) return mappedName;
-            return institutionName;
+            
+            // 2. Check for exact match in the rankings
+            if (RankingData.Rankings.TryGetValue(normalizedName, out string? rank))
+                return rank;
+
+            // 3. Check for fuzzy match
+            string? bestMatch = _matchingService.FindBestMatch(normalizedName, _institutionNames);
+            return bestMatch != null ? RankingData.Rankings[bestMatch] : "NR";
         }
 
         public IReadOnlyList<string> GetAllInstitutionNames() => _institutionNames.AsReadOnly();

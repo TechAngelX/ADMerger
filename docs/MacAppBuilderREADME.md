@@ -10,7 +10,7 @@ Run this command from your project root folder (where `ADMerger.csproj` is locat
 ```
 
 dotnet publish -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ~/Desktop/ADMerger_Build
-(Note: Change osx-x64 to osx-arm64 if building for Apple Silicon M1/M2/M3).
+
 ```
 Step 2: Navigate to the Output Folder
 
