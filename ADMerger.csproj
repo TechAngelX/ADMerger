@@ -7,10 +7,12 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     
-    <VersionPrefix>1.0.0</VersionPrefix>
-    <AssemblyVersion>1.0.0.$([System.DateTime]::UtcNow.ToString("HHmm"))</AssemblyVersion>
-    <FileVersion>$(AssemblyVersion)</FileVersion>
-    <InformationalVersion>1.0.$([System.DateTime]::UtcNow.ToString("yyMMdd")).$([System.DateTime]::UtcNow.ToString("HHmm"))</InformationalVersion>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+
+    <Version>1.0.$([System.DateTime]::UtcNow.ToString("yy"))</Version>
+    <AssemblyVersion>1.0.$([System.DateTime]::UtcNow.ToString("yy"))</AssemblyVersion>
+    <FileVersion>1.0.$([System.DateTime]::UtcNow.ToString("yy"))</FileVersion>
+    <InformationalVersion>1.0.$([System.DateTime]::UtcNow.ToString("yyMMdd"))</InformationalVersion>
     
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>

@@ -307,8 +307,15 @@ public partial class MainWindow : Window
         }
     }
 
-    private void SetVersion() => VersionLabel.Text = "v1.0.0";
-
+private void SetVersion()
+{
+    var v = Assembly.GetExecutingAssembly().GetName().Version;
+    if (v != null)
+    {
+        // Major = 1, Minor = 0, Build = 25
+        VersionLabel.Text = $"v{v.Major}.{v.Minor}.{v.Build}";
+    }
+}
     private async void BrowseInTrayButton_Click(object? sender, RoutedEventArgs e)
     {
         var files = await GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = "Select InTray" });
