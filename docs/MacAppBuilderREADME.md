@@ -18,8 +18,9 @@ Step 2: Navigate to the Output Folder
 cd ~/Desktop/ADMerger_Build
 Step 3: Create the Mac App Structure
 
-
+```
 mkdir -p ADMerger.app/Contents/MacOS
+```
 Step 4: Create the Info.plist Configuration
 Copy and paste this block to create the plist file:
 
