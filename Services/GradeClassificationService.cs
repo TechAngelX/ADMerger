@@ -38,7 +38,7 @@ namespace ADMerger.Services
          // 2. Define UK-System Keywords (Universities with joint/TNE programs)
          var ukKeywords = new[] 
          { 
-             "Liverpool", "Nottingham", "Exeter", "Edinburgh", 
+             "Liverpool", "Nottingham", "Exeter", "Birmingham", "Edinburgh", 
              "Reading", "Sussex", "UK Degree" 
          };
      
