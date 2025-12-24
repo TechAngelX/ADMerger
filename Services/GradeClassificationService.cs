@@ -23,52 +23,87 @@ namespace ADMerger.Services
             _equivalencyService = equivalencyService ?? throw new ArgumentNullException(nameof(equivalencyService));
         }
         
-        public string DetermineUKClassification(string overallGradeGPA, string equivalencyNote, string countryOfStudy, string qualificationName)
-        {
-            if (!string.IsNullOrWhiteSpace(qualificationName) && 
-                qualificationName.Contains("Masters", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!DoesNoteLookLikeUndergrad(equivalencyNote))
-                {
-                    return "Masters";
-                }
-            }
-
-            if (IsUK(countryOfStudy))
-            {
-                return DetermineDomesticGrade(equivalencyNote);
-            }
-
-            double? studentGrade = ExtractGradeValue(equivalencyNote);
-
-            if (studentGrade.HasValue)
-            {
-                var customThresholds = ParseCustomThresholdsFromNote(equivalencyNote);
-                if (customThresholds.Count > 0)
-                {
-                    bool rulesAreHighScale = customThresholds.Values.Any(v => v > 20.0);
-                    double gradeToTest = studentGrade.Value;
-
-                    if (rulesAreHighScale)
-                    {
-                        gradeToTest = GuessScaleAndNormalize(studentGrade.Value);
-                    }
-
-                    return ApplyCustomThresholds(gradeToTest, customThresholds);
-                }
-
-                var equiv = _equivalencyService.GetEquivalency(countryOfStudy);
-                if (equiv != null)
-                {
-                    return ApplySmartEquivalency(studentGrade.Value, equiv);
-                }
-                
-                double stdNormalized = GuessScaleAndNormalize(studentGrade.Value);
-                return ApplyStandardThresholds(stdNormalized);
-            }
-
-            return DetermineClassificationFromTextKeywords(equivalencyNote);
-        }
+     public string DetermineUKClassification(string overallGradeGPA, string equivalencyNote, string countryOfStudy, string qualificationName)
+     {
+         // 1. Masters Check
+         if (!string.IsNullOrWhiteSpace(qualificationName) && 
+             qualificationName.Contains("Masters", StringComparison.OrdinalIgnoreCase))
+         {
+             if (!DoesNoteLookLikeUndergrad(equivalencyNote))
+             {
+                 return "Masters";
+             }
+         }
+     
+         // 2. Define UK-System Keywords (Universities with joint/TNE programs)
+         var ukKeywords = new[] 
+         { 
+             "Liverpool", "Nottingham", "Exeter", "Edinburgh", 
+             "Reading", "Sussex", "UK Degree" 
+         };
+     
+         // 3. Logic: Is it a UK degree regardless of the "Country of Study"?
+         bool isLikelyUKDegree = IsUK(countryOfStudy) || 
+                                 ukKeywords.Any(k => equivalencyNote.Contains(k, StringComparison.OrdinalIgnoreCase));
+     
+         if (isLikelyUKDegree)
+         {
+             // Try to get numeric grade from GPA field first, then the Note
+             double? ukGradeValue = ExtractGradeValue(overallGradeGPA) ?? ExtractGradeValue(equivalencyNote);
+             
+             if (ukGradeValue.HasValue)
+             {
+                 double val = ukGradeValue.Value;
+     
+                 // Handle standard UK 100-point scale (Percentage)
+                 if (val >= 35) 
+                 {
+                     if (val >= 70) return "1.0";
+                     if (val >= 60) return "2.1";
+                     if (val >= 50) return "2.2";
+                     if (val >= 40) return "3.0";
+                     return "Fail";
+                 }
+                 
+                 // Handle GPA scale (e.g., 3.6/4.0) if the UK program uses it for entry
+                 double normalized = GuessScaleAndNormalize(val);
+                 return ApplyStandardThresholds(normalized);
+             }
+             
+             return DetermineDomesticGrade(equivalencyNote);
+         }
+     
+         double? studentGrade = ExtractGradeValue(equivalencyNote);
+     
+         if (studentGrade.HasValue)
+         {
+             var customThresholds = ParseCustomThresholdsFromNote(equivalencyNote);
+             if (customThresholds.Count > 0)
+             {
+                 bool rulesAreHighScale = customThresholds.Values.Any(v => v > 20.0);
+                 double gradeToTest = studentGrade.Value;
+     
+                 if (rulesAreHighScale)
+                 {
+                     gradeToTest = GuessScaleAndNormalize(studentGrade.Value);
+                 }
+     
+                 return ApplyCustomThresholds(gradeToTest, customThresholds);
+             }
+     
+             var equiv = _equivalencyService.GetEquivalency(countryOfStudy);
+             if (equiv != null)
+             {
+                 return ApplySmartEquivalency(studentGrade.Value, equiv);
+             }
+             
+             double stdNormalized = GuessScaleAndNormalize(studentGrade.Value);
+             return ApplyStandardThresholds(stdNormalized);
+         }
+     
+         return DetermineClassificationFromTextKeywords(equivalencyNote);
+     }
+       
 
         private bool DoesNoteLookLikeUndergrad(string note)
         {
