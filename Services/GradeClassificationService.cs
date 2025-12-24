@@ -16,137 +16,168 @@ namespace ADMerger.Services
         private readonly Regex _fractionRegex = new Regex(@"(\d+(?:\.\d+)?)\s*(?:/|out of|of)\s*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
         private readonly Regex _percentRegex = new Regex(@"(\d+(?:\.\d+)?)%", RegexOptions.IgnoreCase);
         private readonly Regex _customThresholdRegex = new Regex(@"(1st|2\.1|2\.2|3rd)[^@_:]*[:@]\s*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
-        private readonly Regex _explicitGradeRegex = new Regex(@"(?:grade|gpa|average)[^0-9_]*(\d+(?:\.\d+)?)", RegexOptions.IgnoreCase);
+        private readonly Regex _priorityKeywordRegex = new Regex(@"(?:average|final|cgpa|overall|gpa)\s*[:\-\s]*\s*(\d{1,3}(?:\.\d+)?)", RegexOptions.IgnoreCase);
+        private readonly Regex _generalGradeRegex = new Regex(@"\b(?!(?:1\.1|2\.1|2\.2))\d{1,3}(?:\.\d+)?\b");
 
         public GradeClassificationService(IEquivalencyService equivalencyService)
         {
             _equivalencyService = equivalencyService ?? throw new ArgumentNullException(nameof(equivalencyService));
         }
-        
-     public string DetermineUKClassification(string overallGradeGPA, string equivalencyNote, string countryOfStudy, string qualificationName)
-     {
-         // 1. Masters Check
-         if (!string.IsNullOrWhiteSpace(qualificationName) && 
-             qualificationName.Contains("Masters", StringComparison.OrdinalIgnoreCase))
-         {
-             if (!DoesNoteLookLikeUndergrad(equivalencyNote))
-             {
-                 return "Masters";
-             }
-         }
-     
-         // 2. Define UK-System Keywords (Universities with joint/TNE programs)
-         var ukKeywords = new[] 
-         { 
-             "Liverpool", "Nottingham", "Exeter", "Birmingham", "Edinburgh", 
-             "Reading", "Sussex", "UK Degree" 
-         };
-     
-         // 3. Logic: Is it a UK degree regardless of the "Country of Study"?
-         bool isLikelyUKDegree = IsUK(countryOfStudy) || 
-                                 ukKeywords.Any(k => equivalencyNote.Contains(k, StringComparison.OrdinalIgnoreCase));
-     
-         if (isLikelyUKDegree)
-         {
-             // Try to get numeric grade from GPA field first, then the Note
-             double? ukGradeValue = ExtractGradeValue(overallGradeGPA) ?? ExtractGradeValue(equivalencyNote);
-             
-             if (ukGradeValue.HasValue)
-             {
-                 double val = ukGradeValue.Value;
-     
-                 // Handle standard UK 100-point scale (Percentage)
-                 if (val >= 35) 
-                 {
-                     if (val >= 70) return "1.0";
-                     if (val >= 60) return "2.1";
-                     if (val >= 50) return "2.2";
-                     if (val >= 40) return "3.0";
-                     return "Fail";
-                 }
-                 
-                 // Handle GPA scale (e.g., 3.6/4.0) if the UK program uses it for entry
-                 double normalized = GuessScaleAndNormalize(val);
-                 return ApplyStandardThresholds(normalized);
-             }
-             
-             return DetermineDomesticGrade(equivalencyNote);
-         }
-     
-         double? studentGrade = ExtractGradeValue(equivalencyNote);
-     
-         if (studentGrade.HasValue)
-         {
-             var customThresholds = ParseCustomThresholdsFromNote(equivalencyNote);
-             if (customThresholds.Count > 0)
-             {
-                 bool rulesAreHighScale = customThresholds.Values.Any(v => v > 20.0);
-                 double gradeToTest = studentGrade.Value;
-     
-                 if (rulesAreHighScale)
-                 {
-                     gradeToTest = GuessScaleAndNormalize(studentGrade.Value);
-                 }
-     
-                 return ApplyCustomThresholds(gradeToTest, customThresholds);
-             }
-     
-             var equiv = _equivalencyService.GetEquivalency(countryOfStudy);
-             if (equiv != null)
-             {
-                 return ApplySmartEquivalency(studentGrade.Value, equiv);
-             }
-             
-             double stdNormalized = GuessScaleAndNormalize(studentGrade.Value);
-             return ApplyStandardThresholds(stdNormalized);
-         }
-     
-         return DetermineClassificationFromTextKeywords(equivalencyNote);
-     }
-       
+
+        public string DetermineUKClassification(string overallGradeGPA, string equivalencyNote, string countryOfStudy, string qualificationName)
+        {
+            if (string.IsNullOrWhiteSpace(equivalencyNote)) return "??";
+
+            // SCRUB TREND: Remove underscores and double underscores used as delimiters in your data
+            string cleanNote = equivalencyNote.Replace("__", " ").Replace("_", " ");
+
+            // 0. Masters Shield
+            if (qualificationName?.Contains("Masters", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                if (!DoesNoteLookLikeUndergrad(cleanNote)) return "Masters";
+            }
+
+            // 1. KEYWORD PRIORITY (Trust "1st", "2.1" in text before math)
+            string keywordResult = DetermineClassificationFromTextKeywords(cleanNote);
+            if (keywordResult != "??") return keywordResult;
+
+            double? studentGrade = ExtractGradeValue(cleanNote);
+            string noteLower = cleanNote.ToLowerInvariant();
+
+            // 2. HARD EXCEPTIONS (Glasgow, Lancaster, Italy)
+            if (noteLower.Contains("lancaster") || noteLower.Contains("glasgow"))
+            {
+                double val = studentGrade ?? 0;
+                if (val >= 17.5) return "1.0";
+                if (val >= 14.5) return "2.1";
+                if (val >= 11.5) return "2.2";
+                if (val >= 8.5)  return "3.0";
+                return "Fail";
+            }
+
+            if (countryOfStudy?.Contains("Italy", StringComparison.OrdinalIgnoreCase) == true || noteLower.Contains("110"))
+            {
+                var m110 = Regex.Matches(cleanNote, @"\b(10[0-9]|110)\b");
+                if (m110.Count > 0)
+                {
+                    double maxVal = m110.Cast<Match>().Select(m => double.Parse(m.Value)).Max();
+                    if (maxVal >= 108) return "1.0";
+                    if (maxVal >= 106) return "2.1";
+                    if (maxVal >= 101) return "2.2";
+                }
+                if (studentGrade.HasValue && studentGrade.Value <= 30)
+                {
+                    double v = studentGrade.Value;
+                    if (v >= 28.5) return "1.0";
+                    if (v >= 26.5) return "2.1";
+                    if (v >= 24.0) return "2.2";
+                    return "3.0";
+                }
+            }
+
+            // 3. GREEDY UK PATTERN RECOGNITION (Added Reading, Essex, Nottingham, Liverpool)
+            var ukKeywords = new[] { 
+                "university of", "college london", "hons", "uk degree", 
+                "reading", "essex", "nottingham", "liverpool", "exeter", 
+                "birmingham", "edinburgh", "sussex", "warwick", "manchester",
+                "kcl", "ucl", "lse", "imperial", "oxford", "cambridge", "stirling"
+            };
+
+            bool looksLikeUK = IsUK(countryOfStudy) || ukKeywords.Any(k => noteLower.Contains(k));
+
+            if (studentGrade.HasValue)
+            {
+                double val = studentGrade.Value;
+                
+                // UK Standard 100-point scale
+                if (looksLikeUK && val >= 35) 
+                {
+                    if (val >= 70) return "1.0";
+                    if (val >= 60) return "2.1";
+                    if (val >= 50) return "2.2";
+                    if (val >= 40) return "3.0";
+                    return "Fail";
+                }
+
+                // International Fallback (CSV Lookup)
+                var equiv = _equivalencyService.GetEquivalency(countryOfStudy);
+                if (equiv != null) return ApplySmartEquivalency(val, equiv);
+                
+                return ApplyStandardThresholds(GuessScaleAndNormalize(val));
+            }
+
+            return "??";
+        }
+
+        private double? ExtractGradeValue(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return null;
+            text = text.Trim().Replace("'", "").Replace("<", "").Replace(">", "");
+
+            var priorityMatch = _priorityKeywordRegex.Match(text);
+            if (priorityMatch.Success && double.TryParse(priorityMatch.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double pExtracted))
+                return pExtracted;
+
+            var fraction = _fractionRegex.Match(text);
+            if (fraction.Success && double.TryParse(fraction.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double num))
+                return num; 
+
+            var percent = _percentRegex.Match(text);
+            if (percent.Success && double.TryParse(percent.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double pVal))
+                return pVal;
+
+            var generalMatches = _generalGradeRegex.Matches(text);
+            if (generalMatches.Count > 0)
+            {
+                return generalMatches.Cast<Match>()
+                    .Select(m => double.TryParse(m.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : 0)
+                    .Where(d => d < 500) // SHIELD: Ignore years
+                    .DefaultIfEmpty(0)
+                    .Max();
+            }
+            return null;
+        }
 
         private bool DoesNoteLookLikeUndergrad(string note)
         {
             if (string.IsNullOrWhiteSpace(note)) return false;
             string lower = note.ToLowerInvariant();
-            
-            return lower.Contains("2:1") || lower.Contains("2.1") || 
-                   lower.Contains("2:2") || lower.Contains("2.2") ||
-                   lower.Contains("1st") || lower.Contains("first class") ||
-                   lower.Contains("upper second") || lower.Contains("lower second") ||
-                   lower.Contains("third class");
+            return lower.Contains("2:1") || lower.Contains("2.1") || lower.Contains("2:2") || lower.Contains("2.2") || lower.Contains("1st") || lower.Contains("first class");
         }
 
         private bool IsUK(string country)
         {
             if (string.IsNullOrWhiteSpace(country)) return false;
-            return country.Contains("United Kingdom", StringComparison.OrdinalIgnoreCase) ||
-                   country.Contains("England", StringComparison.OrdinalIgnoreCase) ||
-                   country.Contains("Scotland", StringComparison.OrdinalIgnoreCase) ||
-                   country.Contains("Wales", StringComparison.OrdinalIgnoreCase);
+            return country.Contains("United Kingdom", StringComparison.OrdinalIgnoreCase) || country.Contains("England", StringComparison.OrdinalIgnoreCase) ||
+                   country.Contains("Scotland", StringComparison.OrdinalIgnoreCase) || country.Contains("Wales", StringComparison.OrdinalIgnoreCase);
         }
 
-        private string DetermineDomesticGrade(string note)
+        private string DetermineClassificationFromTextKeywords(string text)
         {
-            double? numericGrade = ExtractGradeValue(note);
-            
-            if (numericGrade.HasValue)
-            {
-                double val = numericGrade.Value;
-                if (val >= 70.0) return "1.0";
-                if (val >= 60.0) return "2.1";
-                if (val >= 50.0) return "2.2";
-                if (val >= 40.0) return "3.0";
-            }
+            if (string.IsNullOrWhiteSpace(text)) return "??";
+            // REMOVE REQUIRES 2_1: Remove the course requirements so we don't grade the student against the job description
+            string lower = text.ToLowerInvariant();
+            lower = lower.Replace("requires 2.1", "")
+                             .Replace("requires a 2.1", "")
+                             .Replace("requirement is 2.1", "")
+                             .Replace("requires 1st", "");
+            // Now look for the ACTUAL grade the student has
+            if (Regex.IsMatch(lower, @"\b(1st|1\.0|first class)\b")) return "1.0";
+            if (Regex.IsMatch(lower, @"\b(2\.1|2:1|upper second)\b")) return "2.1";
+            if (Regex.IsMatch(lower, @"\b(2\.2|2:2|lower second)\b")) return "2.2";
+            if (Regex.IsMatch(lower, @"\b(3\.0|3rd|third class)\b")) return "3.0";
 
-            return ParseUKGradeText(note);
+            if (lower.Contains("summa cum laude") || lower.Contains("high distinction")) return "1.0";
+            if (lower.Contains("magna cum laude") || lower.Contains("distinction")) return "1.0"; 
+            if (lower.Contains("cum laude") || lower.Contains("merit")) return "2.1";
+            
+            return "??";
         }
 
         private Dictionary<string, double> ParseCustomThresholdsFromNote(string note)
         {
             var thresholds = new Dictionary<string, double>();
             if (string.IsNullOrWhiteSpace(note)) return thresholds;
-
             var matches = _customThresholdRegex.Matches(note);
             foreach (Match match in matches)
             {
@@ -178,58 +209,18 @@ namespace ADMerger.Services
             double? t22  = ExtractGradeValue(equiv.SecondLower); 
 
             if (!t1st.HasValue || !t22.HasValue) return "??";
-
-            bool lowerIsBetter = t1st.Value < t22.Value;
-
-            if (lowerIsBetter)
+            if (t1st.Value < t22.Value)
             {
                 if (grade <= t1st.Value) return "1.0";
                 if (t21.HasValue && grade <= t21.Value) return "2.1";
-                if (grade <= t22.Value) return "2.2";
-                return "3.0"; 
+                return grade <= t22.Value ? "2.2" : "3.0";
             }
             else
             {
                 if (grade >= t1st.Value) return "1.0";
                 if (t21.HasValue && grade >= t21.Value) return "2.1";
-                if (grade >= t22.Value) return "2.2";
-                return "3.0";
+                return grade >= t22.Value ? "2.2" : "3.0";
             }
-        }
-
-        private double? ExtractGradeValue(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return null;
-            
-            text = text.Trim().Replace("'", "").Replace("<", "");
-
-            var explicitMatch = _explicitGradeRegex.Match(text);
-            if (explicitMatch.Success && double.TryParse(explicitMatch.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double extracted))
-            {
-                return extracted;
-            }
-
-            var fraction = _fractionRegex.Match(text);
-            if (fraction.Success && 
-                double.TryParse(fraction.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double num) &&
-                double.TryParse(fraction.Groups[2].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double denom) &&
-                denom != 0)
-            {
-                return num; 
-            }
-
-            var percent = _percentRegex.Match(text);
-            if (percent.Success && double.TryParse(percent.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double pVal))
-            {
-                return pVal;
-            }
-
-            if (double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out double val))
-            {
-                return val;
-            }
-
-            return null;
         }
 
         private double GuessScaleAndNormalize(double grade)
@@ -245,27 +236,7 @@ namespace ADMerger.Services
         {
             if (percent >= 70) return "1.0";
             if (percent >= 60) return "2.1";
-            if (percent >= 50) return "2.2";
-            return "3.0";
-        }
-
-        private string DetermineClassificationFromTextKeywords(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return "??";
-            string lower = text.ToLowerInvariant();
-
-            if (lower.Contains("@")) return "??"; 
-
-            if (lower.Contains("first class") || lower.Contains("1st class")) return "1.0";
-            if (lower.Contains("upper second") || lower.Contains("2:1") || lower.Contains("2.1")) return "2.1";
-            if (lower.Contains("lower second") || lower.Contains("2:2") || lower.Contains("2.2")) return "2.2";
-            if (lower.Contains("third class") || lower.Contains("3rd class")) return "3.0";
-
-            if (lower.Contains("summa cum laude") || lower.Contains("high distinction")) return "1.0";
-            if (lower.Contains("magna cum laude") || lower.Contains("distinction")) return "1.0"; 
-            if (lower.Contains("cum laude") || lower.Contains("merit")) return "2.1";
-            
-            return "??";
+            return percent >= 50 ? "2.2" : "3.0";
         }
 
         public string ParseUKGradeText(string t) => DetermineClassificationFromTextKeywords(t);
