@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ADMerger.Services;
+namespace ADMerger.data;
 
 public static class MappingData
 {

@@ -6,6 +6,7 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    
     <VersionPrefix>1.0.0</VersionPrefix>
     <AssemblyVersion>1.0.0.$([System.DateTime]::UtcNow.ToString("HHmm"))</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
@@ -21,12 +22,14 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.2" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.2" />
     <PackageReference Include="Avalonia.Diagnostics" Version="11.2.2" Condition="'$(Configuration)' == 'Debug'" />
+    
     <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="EPPlus" Version="7.5.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="data\**\*" />
-    <EmbeddedResource Include="audio\**\*" />
+    <Content Include="audio\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

@@ -3,7 +3,7 @@
 using Avalonia; using Avalonia.Controls; using Avalonia.Interactivity; using Avalonia.Platform.Storage; using Avalonia.Threading; using Avalonia.Media; using System.Collections.ObjectModel; using ADMerger.Services; using ADMerger.Models; using ADMerger.Configuration;
 
 using ADMerger.Utilities; using System; using System.Collections.Generic; using System.IO; using System.Linq; using System.Reflection; using System.Threading; using System.Threading.Tasks; using System.Runtime.InteropServices; using System.Diagnostics; using System.ComponentModel; using System.Text;
-
+using ADMerger.data;
 namespace ADMerger.Views;
 
 public class ProcessingItem : INotifyPropertyChanged { private string _status = ""; private string _ukGrade = ""; private string _studentNo = ""; private string _name = "";

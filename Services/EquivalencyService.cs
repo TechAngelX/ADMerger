@@ -2,99 +2,58 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using ADMerger.Models;
-using CsvHelper;
-using CsvHelper.Configuration;
+using ADMerger.data;
 
 namespace ADMerger.Services
 {
     public class EquivalencyService : IEquivalencyService
     {
-        private readonly Dictionary<string, DegreeEquivalency> _equivalencies = new Dictionary<string, DegreeEquivalency>();
-        
-        public int Count => _equivalencies.Count;
+        public int Count => EquivalencyData.Equivalencies.Count;
         
         public void LoadEquivalencies()
         {
-            try
-            {
-                StreamReader reader = null;
-                string csvPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "ucl_degree_equivalencies_FINAL.csv");
-                
-                if (File.Exists(csvPath))
-                {
-                    reader = new StreamReader(csvPath);
-                }
-                else
-                {
-                    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                    var resourceName = "ADMerger.data.ucl_degree_equivalencies_FINAL.csv";
-                    var stream = assembly.GetManifestResourceStream(resourceName);
-                    
-                    if (stream == null)
-                        throw new FileNotFoundException("Equivalencies data not found.");
-                    
-                    reader = new StreamReader(stream);
-                }
-                
-                using (reader)
-                {
-                    var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                    {
-                        HeaderValidated = null,
-                        MissingFieldFound = null,
-                        Delimiter = ","
-                    };
-                    
-                    using var csv = new CsvReader(reader, config);
-                    csv.Read();
-                    csv.ReadHeader();
-                    
-                    while (csv.Read())
-                    {
-                        try
-                        {
-                            string country = csv.GetField(0)?.Trim().TrimStart('\'');
-                            string third = csv.GetField(1)?.Trim().TrimStart('\'').TrimStart('<');
-                            string secondLower = csv.GetField(2)?.Trim().TrimStart('\'');
-                            string secondUpper = csv.GetField(3)?.Trim().TrimStart('\'');
-                            string first = csv.GetField(4)?.Trim().TrimStart('\'');
-                            
-                            if (!string.IsNullOrWhiteSpace(country))
-                            {
-                                _equivalencies[country] = new DegreeEquivalency
-                                {
-                                    Country = country,
-                                    Third = third,
-                                    SecondLower = secondLower,
-                                    SecondUpper = secondUpper,
-                                    First = first
-                                };
-                            }
-                        }
-                        catch { }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Could not load equivalencies: {ex.Message}", ex);
-            }
+            // Data is static and loaded automatically by the compiler.
+            // Method remains for interface compatibility.
         }
         
         public DegreeEquivalency GetEquivalency(string country)
         {
             if (string.IsNullOrWhiteSpace(country))
                 return null;
+
+            string key = country.Trim();
             
-            return _equivalencies.ContainsKey(country.Trim()) ? _equivalencies[country.Trim()] : null;
+            if (EquivalencyData.Equivalencies.TryGetValue(key, out var data))
+            {
+                return new DegreeEquivalency
+                {
+                    Country = key,
+                    Third = data.G30?.TrimStart('<'),
+                    SecondLower = data.G22,
+                    SecondUpper = data.G21,
+                    First = data.G10
+                };
+            }
+            
+            return null;
         }
         
         public Dictionary<string, DegreeEquivalency> GetAllEquivalencies()
         {
-            return new Dictionary<string, DegreeEquivalency>(_equivalencies);
+            var all = new Dictionary<string, DegreeEquivalency>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kvp in EquivalencyData.Equivalencies)
+            {
+                all[kvp.Key] = new DegreeEquivalency
+                {
+                    Country = kvp.Key,
+                    Third = kvp.Value.G30?.TrimStart('<'),
+                    SecondLower = kvp.Value.G22,
+                    SecondUpper = kvp.Value.G21,
+                    First = kvp.Value.G10
+                };
+            }
+            return all;
         }
     }
 }

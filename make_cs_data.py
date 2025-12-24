@@ -40,7 +40,7 @@ public static class RankingData
     }};
 }}
 """
-    with open("Services/RankingData.cs", "w") as out:
+    with open("data/RankingData.cs", "w") as out:
         out.write(content)
     print(f"Successfully generated Services/RankingData.cs with {len(rows)} entries.")
 

@@ -3,7 +3,7 @@ import os
 import sys
 
 mapping_path = "data/institution_mappings.csv"
-output_path = "Services/MappingData.cs"
+output_path = "data/MappingData.cs"
 
 if not os.path.exists(mapping_path):
     print(f"Error: Could not find {mapping_path}")
