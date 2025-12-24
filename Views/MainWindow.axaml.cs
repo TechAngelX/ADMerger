@@ -1,5 +1,3 @@
-// Views/MainWindow.axaml.cs
-
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -20,102 +18,74 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Diagnostics; 
+using System.ComponentModel;
 
 namespace ADMerger.Views;
 
-public class ProcessingItem : System.ComponentModel.INotifyPropertyChanged
+public class ProcessingItem : INotifyPropertyChanged
 {
-    public string? StudentNo { get; set; }
-    public string? Name { get; set; }
-    public string? ReceivedDate { get; set; }
-    
-    private string _status = "Pending";
-    public string Status 
-    { 
-        get => _status;
-        set { _status = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Status))); OnStatusColorChanged(); } 
-    }
+    private string _status = "";
+    private string _ukGrade = "";
+    private string _studentNo = "";
+    private string _name = "";
 
-    public IBrush StatusColor { get; private set; } = Brushes.Transparent;
-    public IBrush StatusForeColor { get; private set; } = Brushes.Gray;
+    public string StudentNo { get => _studentNo; set { _studentNo = value; OnPropertyChanged(nameof(StudentNo)); } }
+    public string Name { get => _name; set { _name = value; OnPropertyChanged(nameof(Name)); } }
+    public string ReceivedDate { get; set; } = "";
 
-    private string _ukGrade = ""; 
-    public string UkGrade
+    public string Status { get => _status; set { _status = value; OnPropertyChanged(nameof(Status)); OnPropertyChanged(nameof(StatusColor)); OnPropertyChanged(nameof(StatusForeColor)); } }
+    public string UkGrade { get => _ukGrade; set { _ukGrade = value; OnPropertyChanged(nameof(UkGrade)); OnPropertyChanged(nameof(GradeColor)); OnPropertyChanged(nameof(GradeForeColor)); } }
+
+    public IBrush StatusColor
     {
-        get => _ukGrade;
-        set { _ukGrade = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(UkGrade))); OnGradeColorChanged(); }
+        get
+        {
+            if (Status.Contains("✓")) return SolidColorBrush.Parse("#DCFCE7");
+            if (Status.Contains("⚠️")) return SolidColorBrush.Parse("#FEF3C7");
+            if (Status.Contains("⚙")) return SolidColorBrush.Parse("#DBEAFE");
+            return SolidColorBrush.Parse("#F1F5F9");
+        }
     }
 
-    public IBrush GradeColor { get; private set; } = Brushes.Transparent;
-    public IBrush GradeForeColor { get; private set; } = Brushes.Black;
-    public FontWeight GradeWeight { get; private set; } = FontWeight.Normal;
-
-    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-    
-    private void OnStatusColorChanged()
+    public IBrush StatusForeColor
     {
-        string s = Status.ToLower();
-        if (s.Contains("done") || s.Contains("success")) {
-            StatusColor = SolidColorBrush.Parse("#D1FAE5");
-            StatusForeColor = SolidColorBrush.Parse("#059669");
+        get
+        {
+            if (Status.Contains("✓")) return SolidColorBrush.Parse("#166534");
+            if (Status.Contains("⚠️")) return SolidColorBrush.Parse("#92400E");
+            if (Status.Contains("⚙")) return SolidColorBrush.Parse("#1E40AF");
+            return SolidColorBrush.Parse("#475569");
         }
-        else if (s.Contains("processing")) {
-             StatusColor = SolidColorBrush.Parse("#DBEAFE");
-             StatusForeColor = SolidColorBrush.Parse("#2563EB");
-        }
-        else if (s.Contains("error") || s.Contains("missing") || s.Contains("stopped")) {
-             StatusColor = SolidColorBrush.Parse("#FEE2E2");
-             StatusForeColor = SolidColorBrush.Parse("#DC2626");
-        }
-        else {
-             StatusColor = SolidColorBrush.Parse("#F1F5F9");
-             StatusForeColor = SolidColorBrush.Parse("#64748B");
-        }
-        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(StatusColor)));
-        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(StatusForeColor)));
     }
 
-    private void OnGradeColorChanged()
+    public IBrush GradeColor
     {
-        string g = UkGrade.ToLower();
-        GradeWeight = FontWeight.Bold;
-        
-        if (g.Contains("1.0") || g.Contains("1st") || g.Contains("distinction")) 
+        get
         {
-            GradeColor = SolidColorBrush.Parse("#D1FAE5");
-            GradeForeColor = SolidColorBrush.Parse("#059669"); 
+            if (string.IsNullOrEmpty(UkGrade) || UkGrade == "??") return Brushes.Transparent;
+            if (UkGrade == "1.0") return SolidColorBrush.Parse("#F0FDF4");
+            if (UkGrade == "2.1") return SolidColorBrush.Parse("#EFF6FF");
+            if (UkGrade == "2.2") return SolidColorBrush.Parse("#FFFBEB");
+            return SolidColorBrush.Parse("#FEF2F2");
         }
-        else if (g.Contains("2.1") || g.Contains("2:1") || g.Contains("merit")) 
-        {
-            GradeColor = SolidColorBrush.Parse("#DBEAFE");
-            GradeForeColor = SolidColorBrush.Parse("#2563EB"); 
-        }
-        else if (g.Contains("2.2") || g.Contains("2:2") || g.Contains("pass")) 
-        {
-            GradeColor = SolidColorBrush.Parse("#FEF3C7");
-            GradeForeColor = SolidColorBrush.Parse("#D97706"); 
-        }
-        else if (g.Contains("3.0") || g.Contains("3rd")) 
-        {
-            GradeColor = SolidColorBrush.Parse("#FFE4E6");
-            GradeForeColor = SolidColorBrush.Parse("#E11D48"); 
-        }
-        else if (g.Contains("masters")) 
-        {
-            GradeColor = SolidColorBrush.Parse("#EDE9FE");
-            GradeForeColor = SolidColorBrush.Parse("#7C3AED"); 
-        }
-        else 
-        {
-            GradeColor = Brushes.Transparent;
-            GradeForeColor = Brushes.Black;
-            GradeWeight = FontWeight.Normal;
-        }
-
-        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(GradeColor)));
-        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(GradeForeColor)));
-        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(GradeWeight)));
     }
+
+    public IBrush GradeForeColor
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(UkGrade) || UkGrade == "??") return SolidColorBrush.Parse("#94A3B8");
+            if (UkGrade == "1.0") return SolidColorBrush.Parse("#15803D");
+            if (UkGrade == "2.1") return SolidColorBrush.Parse("#1D4ED8");
+            if (UkGrade == "2.2") return SolidColorBrush.Parse("#B45309");
+            return SolidColorBrush.Parse("#B91C1C");
+        }
+    }
+
+    public FontWeight GradeWeight => (string.IsNullOrEmpty(UkGrade) || UkGrade == "??") ? FontWeight.Normal : FontWeight.Bold;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
 public partial class MainWindow : Window
@@ -132,6 +102,7 @@ public partial class MainWindow : Window
 
     private CancellationTokenSource? _cancellationTokenSource;
     private bool _isProcessing = false;
+    private bool _rankingsLoaded = false;
     public ObservableCollection<ProcessingItem> ProcessingItems { get; set; } = new ObservableCollection<ProcessingItem>();
 
     [DllImport("winmm.dll")]
@@ -146,8 +117,9 @@ public partial class MainWindow : Window
         _matchingService = new InstitutionMatchingService();
         _rankingService = new RankingService(_matchingService);
         _gradeService = new GradeClassificationService(_equivalencyService);
-        LoadRankingsAndEquivalencies();
+        
         SetVersion();
+        InitializeDataAsync();
         
         BrowseInTrayButton.Click += BrowseInTrayButton_Click;
         BrowseAppReportsButton.Click += BrowseAppReportsButton_Click;
@@ -157,472 +129,212 @@ public partial class MainWindow : Window
         ResetButton.Click += ResetButton_Click;
         ExitButton.Click += ExitButton_Click;
     }
-    
-    private void SetVersion()
+
+    private async void InitializeDataAsync()
     {
-        var assembly = Assembly.GetExecutingAssembly();
-        var infoVersionAttr = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-        string version = infoVersionAttr?.InformationalVersion ?? "1.0.0";
-        if (string.IsNullOrEmpty(version)) version = assembly.GetName().Version?.ToString() ?? "1.0.0";
-        if (version.Contains('+')) version = version.Split('+')[0];
-        var parts = version.Split('.');
-        if (parts.Length >= 3 && parts[2].Length >= 2) version = $"{parts[0]}.{parts[1]}.{parts[2].Substring(0, 2)}";
-        VersionLabel.Text = $"v{version}";
-    }
-    
-    private void LoadRankingsAndEquivalencies()
-    {
+        StatusLabel.Text = "Loading ranking data in background...";
         try
         {
-            _rankingService.LoadRankings();
-            LogStatus($"Loaded {_rankingService.Count} THE World University Rankings");
             _equivalencyService.LoadEquivalencies();
-            LogStatus($"Loaded {_equivalencyService.Count} degree equivalencies");
+            await _rankingService.LoadRankingsAsync();
+            _rankingsLoaded = true;
+            Dispatcher.UIThread.Post(() => {
+                StatusLabel.Text = "Ready";
+                CheckReadyToProcess();
+            });
         }
-        catch (Exception ex)
-        {
-            LogStatus($"Warning: Could not load reference data: {ex.Message}");
-        }
-    }
-    
-    private bool ValidateFileSignature(string path)
-    {
-        try
-        {
-            if (!File.Exists(path)) return false;
-            var extension = Path.GetExtension(path).ToLower();
-            var buffer = new byte[4];
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
-            {
-                if (fs.Length == 0) return false;
-                fs.Read(buffer, 0, 4);
-            }
-
-            bool isZip = (buffer[0] == 0x50 && buffer[1] == 0x4B);
-
-            if (extension == ".xlsx" || extension == ".xls")
-            {
-                if (!isZip && extension == ".xlsx") 
-                {
-                    LogStatus($"ERROR: {Path.GetFileName(path)} is not a valid Excel file.");
-                    return false;
-                }
-            }
-            else if (extension == ".csv" || extension == ".txt")
-            {
-                if (isZip)
-                {
-                    LogStatus($"ERROR: {Path.GetFileName(path)} looks like an Excel file but is named .csv.");
-                    return false;
-                }
-                const int checkSize = 1024;
-                var checkBuffer = new byte[checkSize];
-                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
-                {
-                    int read = fs.Read(checkBuffer, 0, checkSize);
-                    for (int i = 0; i < read; i++)
-                    {
-                        if (checkBuffer[i] == 0) 
-                        {
-                            LogStatus($"ERROR: {Path.GetFileName(path)} appears to be a binary file.");
-                            return false;
-                        }
-                    }
-                }
-            }
-            return true;
-        }
-        catch { return false; }
-    }
-
-    private async void BrowseInTrayButton_Click(object? sender, RoutedEventArgs e)
-    {
-        var topLevel = GetTopLevel(this);
-        if (topLevel == null) return;
-        
-        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select InTray File",
-            AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType("Excel or CSV") { Patterns = new[] { "*.xlsx", "*.csv" } } }
-        });
-
-        if (files.Count > 0)
-        {
-            var path = files[0].Path.LocalPath;
-            if (!ValidateFileSignature(path)) {
-                LogStatus("Error: Invalid InTray file format.");
-                StatusLabel.Text = "Invalid File Format";
-                StatusLabel.Foreground = Brushes.Red;
-                return;
-            }
-
-            _inTrayFilePath = path;
-            InTrayFileLabel.Text = Path.GetFileName(_inTrayFilePath);
-            LogStatus($"Selected InTray file: {Path.GetFileName(_inTrayFilePath)}");
-            CheckReadyToProcess();
-            
-            try {
-                var records = _csvService.LoadInTrayRecords(_inTrayFilePath);
-                ProcessingItems.Clear();
-                foreach(var r in records.Take(50)) { 
-                    ProcessingItems.Add(new ProcessingItem { StudentNo = r.StudentNo, Name = r.Name, ReceivedDate = r.ReceivedOn, Status = "⏳ Pending", UkGrade = "" });
-                }
-                if (records.Count > 50) LogStatus($"...and {records.Count - 50} more records.");
-                EmptyStatePanel.IsVisible = false;
-                FooterStatus.Text = $"{records.Count} Records waiting";
-                StatusLabel.Foreground = Brushes.Black;
-            } catch { }
-        }
-    }
-    
-    private async void BrowseAppReportsButton_Click(object? sender, RoutedEventArgs e)
-    {
-        var topLevel = GetTopLevel(this);
-        if (topLevel == null) return;
-        
-        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select Application Reports",
-            AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType("Excel or CSV") { Patterns = new[] { "*.xlsx", "*.csv" } } }
-        });
-
-        if (files.Count > 0)
-        {
-            var path = files[0].Path.LocalPath;
-            if (!ValidateFileSignature(path)) {
-                LogStatus("Error: Invalid App Reports file format.");
-                StatusLabel.Text = "Invalid File Format";
-                StatusLabel.Foreground = Brushes.Red;
-                return;
-            }
-
-            _appReportsFilePath = path;
-            AppReportsFileLabel.Text = Path.GetFileName(_appReportsFilePath);
-            LogStatus($"Selected App Reports: {Path.GetFileName(_appReportsFilePath)}");
-            CheckReadyToProcess();
-            StatusLabel.Foreground = Brushes.Black;
-        }
-    }
-    
-    private async void BrowseOutputButton_Click(object? sender, RoutedEventArgs e)
-    {
-        var topLevel = GetTopLevel(this);
-        if (topLevel == null) return;
-        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Select Output Folder" });
-        if (folders.Count > 0)
-        {
-            _outputFolderPath = folders[0].Path.LocalPath;
-            OutputFolderLabel.Text = _outputFolderPath;
-            CheckReadyToProcess();
-        }
+        catch (Exception ex) { LogStatus($"Load error: {ex.Message}"); }
     }
     
     private void CheckReadyToProcess()
     {
-        bool ready = !string.IsNullOrEmpty(_inTrayFilePath) && !string.IsNullOrEmpty(_appReportsFilePath) && !string.IsNullOrEmpty(_outputFolderPath);
-        ProcessButton.IsEnabled = ready;
-        StatusLabel.Text = ready ? "Ready to start processing" : "Waiting for files...";
-        if (ready) StatusLabel.Foreground = Brushes.Black;
+        bool filesSelected = !string.IsNullOrEmpty(_inTrayFilePath) && 
+                             !string.IsNullOrEmpty(_appReportsFilePath) && 
+                             !string.IsNullOrEmpty(_outputFolderPath);
+        ProcessButton.IsEnabled = filesSelected && _rankingsLoaded;
+        if (!_rankingsLoaded) StatusLabel.Text = "Waiting for rankings...";
+        else StatusLabel.Text = filesSelected ? "Ready to start" : "Waiting for files...";
     }
-    
+
+    private async Task ShowMessageBoxAsync(string title, string message)
+    {
+        var okButton = new Button { 
+            Content = "OK", 
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, 
+            Background = SolidColorBrush.Parse("#2563EB"), 
+            Foreground = Brushes.White,
+            Padding = new Thickness(20, 10)
+        };
+
+        var win = new Window { 
+            Title = title, Width = 500, Height = 350, 
+            WindowStartupLocation = WindowStartupLocation.CenterOwner, 
+            SystemDecorations = SystemDecorations.BorderOnly, 
+            ExtendClientAreaToDecorationsHint = true, 
+            Content = new Border { 
+                BorderBrush = Brushes.Gray, BorderThickness = new Thickness(1), Padding = new Thickness(30),
+                Child = new StackPanel { 
+                    Spacing = 20, 
+                    Children = { 
+                        new TextBlock { Text = title, FontWeight = FontWeight.Bold, FontSize = 20 }, 
+                        new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap, FontSize = 14 }, 
+                        okButton 
+                    } 
+                } 
+            } 
+        };
+
+        okButton.Click += (s, e) => {
+            win.Close();
+            if (title == "Success" && !string.IsNullOrEmpty(_outputFolderPath) && Directory.Exists(_outputFolderPath)) {
+                try {
+                    Process.Start(new ProcessStartInfo { FileName = _outputFolderPath, UseShellExecute = true });
+                } catch { }
+            }
+        };
+        await win.ShowDialog(this);
+    }
+
     private async void ProcessButton_Click(object? sender, RoutedEventArgs e)
     {
         if (_isProcessing)
         {
             _cancellationTokenSource?.Cancel();
-            ProcessButton.Content = "Stopping...";
-            ProcessButton.IsEnabled = false; 
-            LogStatus("User requested stop.");
             return;
-        }
-
-        if (!ValidateFileSignature(_inTrayFilePath) || !ValidateFileSignature(_appReportsFilePath))
-        {
-             StatusLabel.Text = "ERROR: Make sure you're importing the right spreadsheets.";
-             StatusLabel.Foreground = Brushes.Red;
-             LogStatus("Process aborted: Invalid file signatures.");
-             return; 
         }
 
         _isProcessing = true;
         _cancellationTokenSource = new CancellationTokenSource();
         var token = _cancellationTokenSource.Token;
-
-        ProcessButton.Content = "🛑 STOP"; 
-        ProcessButton.Background = SolidColorBrush.Parse("#DC2626"); 
-        BrowseInTrayButton.IsEnabled = false;
-        BrowseAppReportsButton.IsEnabled = false;
-        BrowseOutputButton.IsEnabled = false;
-        MainProgressBar.Value = 0;
-        StatusLabel.Foreground = Brushes.Black;
+        ProcessButton.Content = "🛑 STOP";
+        ProcessButton.Background = SolidColorBrush.Parse("#DC2626");
 
         try
         {
-            LogStatus("=== Starting Processing ===");
-            StatusLabel.Text = "Reading files...";
-            
             await Task.Run(async () => {
-                if (token.IsCancellationRequested) return;
-
                 var inTrayRecords = _csvService.LoadInTrayRecords(_inTrayFilePath);
-                if (token.IsCancellationRequested) return;
                 var appRecords = _csvService.LoadApplicationRecords(_appReportsFilePath);
                 
                 await Dispatcher.UIThread.InvokeAsync(() => {
                     ProcessingItems.Clear();
-                    EmptyStatePanel.IsVisible = false;
                     foreach(var r in inTrayRecords) 
-                        ProcessingItems.Add(new ProcessingItem { StudentNo = r.StudentNo, Name = r.Name, ReceivedDate = r.ReceivedOn, Status = "⏳ Pending", UkGrade = "" });
+                        ProcessingItems.Add(new ProcessingItem { StudentNo = r.StudentNo, Name = r.Name, Status = "⏳ Pending" });
+                    FooterStatus.Text = $"0/{inTrayRecords.Count} Processed";
                 });
 
                 var outputRecords = new List<OutputRecord>();
-                int total = inTrayRecords.Count;
                 int current = 0;
 
                 foreach (var inTray in inTrayRecords)
                 {
-                    if (token.IsCancellationRequested) {
-                        await Dispatcher.UIThread.InvokeAsync(() => StatusLabel.Text = "Stopped");
-                        return;
-                    }
-
+                    if (token.IsCancellationRequested) return;
                     current++;
-                    var studentNo = inTray.StudentNo?.Trim();
-                    var app = appRecords.FirstOrDefault(a => a.ApplicantID?.Trim() == studentNo);
 
-                    string newStatus = "⚙ Processing...";
-                    string newGrade = "";
+                    var app = appRecords.FirstOrDefault(a => a.ApplicantID?.Trim() == inTray.StudentNo?.Trim());
+                    string classification = "??";
 
-                    if (app == null)
+                    if (app != null)
                     {
-                        newStatus = "⚠️ Missing";
-                        newGrade = "N/A";
-                    }
-                    else
-                    {
-                        var programmeCode = ProgrammeMapping.GetCode(app.Programme ?? "");
-                        var ukGrade = _gradeService.DetermineUKClassification(
-                            app.OverallGradeGPA ?? "", 
-                            app.EquivalencyNote ?? "", 
-                            app.CountryOfStudy ?? "", 
-                            app.QualificationName ?? "");
-
-                        var theRanking = _rankingService.GetRanking(app.InstitutionName ?? "");
+                        classification = _gradeService.DetermineUKClassification(app.OverallGradeGPA ?? "", app.EquivalencyNote ?? "", app.CountryOfStudy ?? "", app.QualificationName ?? "");
                         
-                        outputRecords.Add(new OutputRecord
-                        {
+                        outputRecords.Add(new OutputRecord {
                             ReceivedDate = DateFormatter.FormatDate(inTray.ReceivedOn ?? ""),
                             DueDate = DateFormatter.CalculateDueDate(inTray.ReceivedOn ?? ""),
                             StudentNo = inTray.StudentNo,
-                            Programme = programmeCode,
+                            Programme = ProgrammeMapping.GetCode(app.Programme ?? ""),
                             Forename = app.Forename,
                             Surname = app.Surname,
                             FeeStatus = app.FeeStatus,
                             QualificationName = app.QualificationName,
                             DegreeSubject = app.DegreeSubject,
                             InstitutionName = app.InstitutionName,
-                            THERanking = theRanking,
+                            THERanking = _rankingService.GetRanking(app.InstitutionName ?? ""),
                             CountryOfStudy = app.CountryOfStudy,
                             EquivalencyNote = app.EquivalencyNote,
                             OverallGradeGPA = app.OverallGradeGPA,
                             DegreeStatus = app.GradeAchievedPending,
-                            UKGrade = ukGrade
+                            UKGrade = classification
                         });
-                        newStatus = "✓ Done";
-                        newGrade = ukGrade;
                     }
 
                     await Dispatcher.UIThread.InvokeAsync(() => {
-                        var uiItem = ProcessingItems.FirstOrDefault(p => p.StudentNo == inTray.StudentNo);
-                        if (uiItem != null) 
-                        {
-                            uiItem.Status = newStatus;   
-                            uiItem.UkGrade = newGrade;   
-                        }
-                        MainProgressBar.Value = (double)current / total * 100;
-                        FooterStatus.Text = $"{current}/{total} Processed";
+                        var item = ProcessingItems.FirstOrDefault(p => p.StudentNo == inTray.StudentNo);
+                        if (item != null) { item.Status = app != null ? "✓ Done" : "⚠️ Missing"; item.UkGrade = classification; }
+                        MainProgressBar.Value = (double)current / inTrayRecords.Count * 100;
+                        FooterStatus.Text = $"{current}/{inTrayRecords.Count} Processed";
                     });
-
-                    await Task.Delay(50);
                 }
 
-                if (outputRecords.Count == 0)
+                var outputPaths = _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
+
+                if (!token.IsCancellationRequested)
                 {
                     await Dispatcher.UIThread.InvokeAsync(async () => {
-                         StatusLabel.Text = "No matches found";
-                         await ShowMessageBoxAsync("No Matches", "No matches found between files.");
+                        int countFirst = outputRecords.Count(r => r.UKGrade == "1.0");
+                        int countUpper = outputRecords.Count(r => r.UKGrade == "2.1");
+                        int countLower = outputRecords.Count(r => r.UKGrade == "2.2");
+                        int countThird = outputRecords.Count(r => r.UKGrade == "3.0");
+                        int countOther = outputRecords.Count - (countFirst + countUpper + countLower + countThird);
+
+                        string summaryList = $"{countFirst}\t(First Class)\n" +
+                                             $"{countUpper}\t(Upper Second)\n" +
+                                             $"{countLower}\t(Lower Second)";
+
+                        if (countThird > 0) summaryList += $"\n{countThird}\t(Third Class)";
+                        if (countOther > 0) summaryList += $"\n{countOther}\t(Other / Ungraded)";
+
+                        string summary = $"Processed {outputRecords.Count} records:\n\n{summaryList}";
+
+                        await ShowMessageBoxAsync("Success", 
+                            $"Processing complete!\n\n{summary}\n\nExcel file(s) saved at:\n{_outputFolderPath}");
                     });
-                    return;
                 }
-                
-                if (token.IsCancellationRequested) return;
-
-                await Dispatcher.UIThread.InvokeAsync(() => StatusLabel.Text = "Generating Excel files...");
-                var outputPaths = _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
-                
-                PlaySuccessSound();
-                await Dispatcher.UIThread.InvokeAsync(async () => {
-                    StatusLabel.Text = "Complete!";
-                    MainProgressBar.Value = 100;
-                    FooterStatus.Text = "Finished";
-                    foreach (var path in outputPaths) LogStatus($"Generated: {Path.GetFileName(path)}");
-                    
-                    int countFirst = outputRecords.Count(r => r.UKGrade == "1.0");
-                    int countUpper = outputRecords.Count(r => r.UKGrade == "2.1");
-                    int countLower = outputRecords.Count(r => r.UKGrade == "2.2");
-                    int countThird = outputRecords.Count(r => r.UKGrade == "3.0");
-                    int countOther = outputRecords.Count - (countFirst + countUpper + countLower + countThird);
-                    
-                    string summaryList = $"{countFirst}\t(First Class)\n" +
-                                         $"{countUpper}\t(Upper Second)\n" +
-                                         $"{countLower}\t(Lower Second)";
-
-                    if (countThird > 0) summaryList += $"\n{countThird}\t(Third Class)";
-                    if (countOther > 0) summaryList += $"\n{countOther}\t(Other / Ungraded)";
-
-                    string summary = $"Processed {outputRecords.Count} records:\n\n{summaryList}";
-
-                    await ShowMessageBoxAsync("Success", 
-                        $"Processing complete!\n\n{summary}\n\nExcel file(s) saved at:\n{_outputFolderPath}");
-                });
-            }, token); 
+            }, token);
         }
-        catch (Exception ex)
-        {
-            LogStatus($"ERROR: {ex.Message}");
-            StatusLabel.Text = "ERROR: Make sure you're importing the right spreadsheets.";
-            StatusLabel.Foreground = Brushes.Red;
-        }
+        catch (Exception ex) { LogStatus($"Error: {ex.Message}"); }
         finally
         {
             _isProcessing = false;
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
             ProcessButton.Content = "Process Files";
             ProcessButton.Background = SolidColorBrush.Parse("#2563EB");
-            ProcessButton.IsEnabled = true;
-            BrowseInTrayButton.IsEnabled = true;
-            BrowseAppReportsButton.IsEnabled = true;
-            BrowseOutputButton.IsEnabled = true;
+            CheckReadyToProcess();
         }
     }
 
-    private void PlaySuccessSound()
-    {
-        try {
-            string tempPath = Path.Combine(Path.GetTempPath(), "admerger_confirmed.mp3");
-            if (!File.Exists(tempPath)) {
-                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ADMerger.audio.confirmed.mp3"))
-                using (var fileStream = File.Create(tempPath)) stream?.CopyTo(fileStream);
-            }
-            if (File.Exists(tempPath)) {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) System.Diagnostics.Process.Start("afplay", $"\"{tempPath}\"");
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                    mciSendString($"open \"{tempPath}\" type mpegvideo alias MyMp3", null, 0, IntPtr.Zero);
-                    mciSendString("play MyMp3", null, 0, IntPtr.Zero);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) System.Diagnostics.Process.Start("paplay", $"\"{tempPath}\"");
-            }
-        } catch { }
-    }
-    
-    private void ClearLogButton_Click(object? sender, RoutedEventArgs e)
-    {
-        StatusLog.Text = string.Empty;
-        StatusLabel.Foreground = Brushes.Black;
-    }
-    
-    private void ResetButton_Click(object? sender, RoutedEventArgs e)
-    {
-        if (_isProcessing) _cancellationTokenSource?.Cancel();
-        _inTrayFilePath = string.Empty;
-        _appReportsFilePath = string.Empty;
-        _outputFolderPath = string.Empty;
-        InTrayFileLabel.Text = "No file selected";
-        AppReportsFileLabel.Text = "No file selected";
-        OutputFolderLabel.Text = "No folder selected";
-        StatusLog.Text = string.Empty;
-        ProcessingItems.Clear();
-        EmptyStatePanel.IsVisible = true;
-        MainProgressBar.Value = 0;
-        FooterStatus.Text = "0/0 Records";
-        StatusLabel.Text = "Waiting for files...";
-        StatusLabel.Foreground = Brushes.Black;
-        CheckReadyToProcess();
-    }
-    
-    private void ExitButton_Click(object? sender, RoutedEventArgs e)
-    {
-        Environment.Exit(0);
-    }
-    
-    private void LogStatus(string message)
-    {
-        Dispatcher.UIThread.Post(() => {
-            StatusLog.Text += $"[{DateTime.Now:HH:mm:ss}] {message}\n";
-            StatusLog.CaretIndex = StatusLog.Text?.Length ?? 0;
-        });
-    }
-    
-    private async System.Threading.Tasks.Task ShowMessageBoxAsync(string title, string message)
-    {
-        var okButton = new Button { 
-            Content = "OK", 
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, 
-            Background = SolidColorBrush.Parse("#2563EB"), 
-            Foreground = Brushes.White 
-        };
+    private void SetVersion() => VersionLabel.Text = "v1.0.0";
 
-        var win = new Window {
-            Title = title, 
-            Width = 500,        
-            Height = 350,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SystemDecorations = SystemDecorations.BorderOnly, 
-            ExtendClientAreaToDecorationsHint = true,
-            Content = new Border {
-                BorderBrush = Brushes.Gray, BorderThickness = new Thickness(1), Padding = new Thickness(20),
-                Child = new StackPanel {
-                    Spacing = 20,
-                    Children = {
-                        new TextBlock { Text = title, FontWeight = FontWeight.Bold, FontSize = 18 },
-                        new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
-                        okButton
-                    }
-                }
-            }
-        };
-
-        okButton.Click += (s, e) => {
-            win.Close();
-            
-            if (title == "Success" && !string.IsNullOrEmpty(_outputFolderPath) && Directory.Exists(_outputFolderPath))
-            {
-                try
-                {
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        Process.Start(new ProcessStartInfo {
-                            FileName = _outputFolderPath,
-                            UseShellExecute = true,
-                            Verb = "open"
-                        });
-                    }
-                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                    {
-                        Process.Start("open", $"\"{_outputFolderPath}\"");
-                    }
-                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    {
-                        Process.Start("xdg-open", $"\"{_outputFolderPath}\"");
-                    }
-                }
-                catch { }
-            }
-        };
-
-        await win.ShowDialog(this);
+    private async void BrowseInTrayButton_Click(object? sender, RoutedEventArgs e)
+    {
+        var files = await GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = "Select InTray" });
+        if (files.Any()) {
+            _inTrayFilePath = files[0].Path.LocalPath;
+            InTrayFileLabel.Text = Path.GetFileName(_inTrayFilePath);
+            CheckReadyToProcess();
+        }
     }
+
+    private async void BrowseAppReportsButton_Click(object? sender, RoutedEventArgs e)
+    {
+        var files = await GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = "Select App Reports" });
+        if (files.Any()) {
+            _appReportsFilePath = files[0].Path.LocalPath;
+            AppReportsFileLabel.Text = Path.GetFileName(_appReportsFilePath);
+            CheckReadyToProcess();
+        }
+    }
+
+    private async void BrowseOutputButton_Click(object? sender, RoutedEventArgs e)
+    {
+        var folders = await GetTopLevel(this)!.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Select Output" });
+        if (folders.Any()) {
+            _outputFolderPath = folders[0].Path.LocalPath;
+            OutputFolderLabel.Text = _outputFolderPath;
+            CheckReadyToProcess();
+        }
+    }
+
+    private void LogStatus(string message) => Dispatcher.UIThread.Post(() => StatusLog.Text += $"[{DateTime.Now:HH:mm:ss}] {message}\n");
+    private void ClearLogButton_Click(object? sender, RoutedEventArgs e) => StatusLog.Text = string.Empty;
+    private void ExitButton_Click(object? sender, RoutedEventArgs e) => Environment.Exit(0);
+    private void ResetButton_Click(object? sender, RoutedEventArgs e) => CheckReadyToProcess();
 }

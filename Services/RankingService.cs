@@ -1,10 +1,10 @@
 ﻿// Services/RankingService.cs
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using OfficeOpenXml;
 
 namespace ADMerger.Services
@@ -23,56 +23,59 @@ namespace ADMerger.Services
             _matchingService = matchingService ?? throw new ArgumentNullException(nameof(matchingService));
         }
         
-        public void LoadRankings()
+        public async Task LoadRankingsAsync()
         {
-            _rankings.Clear();
-            _institutionNames.Clear();
-            LoadInstitutionMappings();
-            
-            try
+            await Task.Run(() => 
             {
-                string excelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "THE Ranking 2026.xlsx");
+                _rankings.Clear();
+                _institutionNames.Clear();
+                LoadInstitutionMappings();
                 
-                if (!File.Exists(excelPath))
+                try
                 {
-                    excelPath = Path.Combine(Directory.GetCurrentDirectory(), "data", "THE Ranking 2026.xlsx");
-                }
-
-                if (File.Exists(excelPath))
-                {
-                    using (var stream = File.OpenRead(excelPath))
-                    using (var package = new ExcelPackage(stream))
+                    string excelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "THE Ranking 2026.xlsx");
+                    
+                    if (!File.Exists(excelPath))
                     {
-                        var worksheet = package.Workbook.Worksheets[0]; 
-                        
-                        if (worksheet.Dimension != null)
+                        excelPath = Path.Combine(Directory.GetCurrentDirectory(), "data", "THE Ranking 2026.xlsx");
+                    }
+
+                    if (File.Exists(excelPath))
+                    {
+                        using (var stream = File.OpenRead(excelPath))
+                        using (var package = new ExcelPackage(stream))
                         {
-                            int totalRows = worksheet.Dimension.Rows;
-                            for (int row = 2; row <= totalRows; row++)
+                            var worksheet = package.Workbook.Worksheets[0]; 
+                            
+                            if (worksheet.Dimension != null)
                             {
-                                var rankCell = worksheet.Cells[row, 1].Value;
-                                var nameCell = worksheet.Cells[row, 2].Value;
-                                
-                                if (rankCell != null && nameCell != null)
+                                int totalRows = worksheet.Dimension.Rows;
+                                for (int row = 2; row <= totalRows; row++)
                                 {
-                                    string rank = rankCell.ToString().Trim();
-                                    string name = nameCell.ToString().Trim();
+                                    var rankCell = worksheet.Cells[row, 1].Value;
+                                    var nameCell = worksheet.Cells[row, 2].Value;
                                     
-                                    if (!string.IsNullOrWhiteSpace(name))
+                                    if (rankCell != null && nameCell != null)
                                     {
-                                        _rankings[name] = rank;
-                                        _institutionNames.Add(name);
+                                        string rank = rankCell.ToString().Trim();
+                                        string institutionName = nameCell.ToString().Trim();
+                                        
+                                        if (!string.IsNullOrWhiteSpace(institutionName))
+                                        {
+                                            _rankings[institutionName] = rank;
+                                            _institutionNames.Add(institutionName);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Ranking Load Error: {ex.Message}");
-            }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Ranking Load Error: {ex.Message}");
+                }
+            });
         }
         
         public string GetRanking(string institutionName)
