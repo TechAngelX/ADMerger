@@ -34,23 +34,23 @@ dotnet publish -c Release -r win-x64 --self-contained true `
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✓ Build successful!" -ForegroundColor Green
     
-    $publishFolder = "$projectPath\bin\Release\net9.0-windows\win-x64\publish"
+    # FIXED: Changed net9.0-windows to net10.0
+    $publishFolder = "$projectPath\bin\Release\net10.0\win-x64\publish"
     $publishedExe = Get-ChildItem -Path "$publishFolder\ADMerger.exe" -ErrorAction SilentlyContinue
-    
+
     if ($publishedExe) {
         $desktopExe = "$desktopPath\ADMerger.exe"
-        
+
         if (Test-Path $desktopExe) {
             Remove-Item $desktopExe -Force
         }
-        
+
         Copy-Item $publishedExe.FullName -Destination $desktopExe -Force
-        
         $fileSize = [math]::Round($publishedExe.Length / 1MB, 2)
-        
+
         Write-Host ""
         Write-Host "===========================================" -ForegroundColor Green
-        Write-Host "   SUCCESS! ✓                             " -ForegroundColor Green
+        Write-Host "           SUCCESS! ✓                      " -ForegroundColor Green
         Write-Host "===========================================" -ForegroundColor Green
         Write-Host ""
         Write-Host "Standalone executable created:" -ForegroundColor White
@@ -59,20 +59,19 @@ if ($LASTEXITCODE -eq 0) {
         Write-Host "File size: $fileSize MB" -ForegroundColor White
         Write-Host ""
         Write-Host "✓ ALL data files embedded in EXE:" -ForegroundColor Green
-        Write-Host "    - THE Ranking 2026.xlsx" -ForegroundColor Gray
-        Write-Host "    - ucl_degree_equivalencies_FINAL.csv" -ForegroundColor Gray
-        Write-Host "    - institution_mappings.csv" -ForegroundColor Gray
+        Write-Host "  - THE Ranking 2026.xlsx" -ForegroundColor Gray
+        Write-Host "  - ucl_degree_equivalencies_FINAL.csv" -ForegroundColor Gray
+        Write-Host "  - institution_mappings.csv" -ForegroundColor Gray
         Write-Host ""
         Write-Host "✓ No external files needed!" -ForegroundColor Green
         Write-Host "✓ Single file - ready to share!" -ForegroundColor Green
         Write-Host ""
         Write-Host "🚀 Send ADMerger.exe to friends - it's 100% standalone!" -ForegroundColor Yellow
-    }
-    else {
+    } else {
         Write-Host "ERROR: Could not find published executable!" -ForegroundColor Red
+        Write-Host "Expected at: $publishFolder\ADMerger.exe" -ForegroundColor Yellow
     }
-}
-else {
+} else {
     Write-Host ""
     Write-Host "ERROR: Build failed!" -ForegroundColor Red
     Write-Host "Tip: Make sure Excel and ADMerger are closed!" -ForegroundColor Yellow
