@@ -115,8 +115,7 @@ Southwestern University of Finance and Economics,NOT_RANKED,NotRanked
 ## Prerequisites
 
 ### Required Software
-
-Whether on Mac or Windows, you need to have the .NET 10 framework installed first. Install the framework on Terminal (Mac) or Powershghell / WSL / Windows CLI
+Tested on macOS Sonoma and Windows 11 or later. It may work on Windows 10 or earlier macOS versions, but this is not guaranteed. Whether on Mac or Windows, you need to have the .NET 10 framework installed first. Install the framework on Terminal (Mac) or Powershghell / WSL / Windows CLI
 
 **macOS:**
 ```bash
@@ -127,8 +126,7 @@ brew install dotnet@10
 # https://dotnet.microsoft.com/download/dotnet/10.0
 
 # Verify installation
-dotnet --version  
-# Should show version 10.0.x
+dotnet --version  # Should show 10.0.x
 ```
 
 **Windows:**
@@ -150,27 +148,21 @@ cd ADMerger
 dotnet run
 
 # Or build standalone application
-./goDeployMAC.sh        # macOS
-# .\goDeploy.ps1         # Windows (PowerShell)
-```
-
+**macOS:**
+./goDeployMAC.sh       # Creates a Mac Standalone executable file.
 **Note:** The `goDeployMAC.sh` script is already executable when cloned. If you downloaded the project as a zip file, you may need to run `chmod +x goDeployMAC.sh` first.
-
-## Building and Distribution
-
-### Development Build
-
-```bash
-dotnet run
+*
+**Windows 11:**
+* macOs
+.\goDeploy.ps1         # Windoes - Creates a standalone EXE file in `%USERPROFILE%\Desktop\ADMerger_Build\
 ```
 
-### Production Build - Windows (Standalone EXE)
 
 ```powershell
 .\goDeploy.ps1
 ```
 
-Creates a clean build in `%USERPROFILE%\Desktop\ADMerger_Build\` with:
+Creates a clean build in  with:
 - `ADMerger.exe` - Standalone executable with all data files embedded
 
 **Build Configuration:**
