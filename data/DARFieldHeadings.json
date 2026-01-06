@@ -1,0 +1,481 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Field headings reference for ADMerger application, for Open-Closed Principle (OCP) design practices. This file documents all available fields from the Department Application Reports CSV file to support future customisation and bespoke output reports.",
+  "version": "1.0",
+  "sourceFile": "Department_Application_Reports_Computer_Science.csv",
+  "lastUpdated": "2026-01-06",
+  "totalFieldsAvailable": 36,
+  "currentlyUsedFields": 12,
+
+  "availableFields": [
+    {
+      "fieldName": "Applicant ID",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "ApplicantID",
+      "appearsInOutput": true,
+      "outputColumnName": "StudentNo",
+      "notes": "Primary key for matching with InTray file. Mapped to StudentNo in output."
+    },
+    {
+      "fieldName": "Programme",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "Programme",
+      "appearsInOutput": true,
+      "outputColumnName": "Programme",
+      "notes": "Academic programme (e.g., 'MSc Machine Learning'). Converted to code via ProgrammeMapping."
+    },
+    {
+      "fieldName": "Forename",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "Forename",
+      "appearsInOutput": true,
+      "outputColumnName": "Forename",
+      "notes": "Applicant's legal first name"
+    },
+    {
+      "fieldName": "Known as",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Preferred name if different from legal forename. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Surname",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "Surname",
+      "appearsInOutput": true,
+      "outputColumnName": "Surname",
+      "notes": "Applicant's last name"
+    },
+    {
+      "fieldName": "Mode of attendance",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Study mode (e.g., 'Full-time', 'Part-time'). NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Location",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Campus or department location code. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "State",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Application workflow state (e.g., 'Reject application'). NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Email address",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Applicant's email address. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Gender",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Applicant's gender (e.g., 'M', 'F'). NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Date of Birth",
+      "dataType": "date",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Applicant's date of birth (format: DD-MMM-YY). NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Fee Status",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "FeeStatus",
+      "appearsInOutput": true,
+      "outputColumnName": "FeeStatus",
+      "notes": "Fee classification (e.g., 'HOME (PROVISIONAL)', 'OVERSEAS')"
+    },
+    {
+      "fieldName": "Country of Nationality",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Applicant's nationality. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Qualification name",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "QualificationName",
+      "appearsInOutput": true,
+      "outputColumnName": "QualificationName",
+      "notes": "Type of qualification (e.g., 'Bachelors degree (undergraduate)')"
+    },
+    {
+      "fieldName": "Degree subject",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "DegreeSubject",
+      "appearsInOutput": true,
+      "outputColumnName": "DegreeSubject",
+      "notes": "Subject area of previous qualification"
+    },
+    {
+      "fieldName": "Institution name",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "InstitutionName",
+      "appearsInOutput": true,
+      "outputColumnName": "InstitutionName",
+      "notes": "Name of awarding institution. Used for THE ranking lookup."
+    },
+    {
+      "fieldName": "Country of study",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "CountryOfStudy",
+      "appearsInOutput": true,
+      "outputColumnName": "CountryOfStudy",
+      "notes": "Country where qualification was obtained. Used for grade equivalency."
+    },
+    {
+      "fieldName": "Qualification end date",
+      "dataType": "date",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Graduation/completion date (format: DD-MMM-YY). NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Overall  grade/GPA",
+      "dataType": "string/numeric",
+      "currentlyUsed": true,
+      "mappedToProperty": "OverallGradeGPA",
+      "appearsInOutput": true,
+      "outputColumnName": "OverallGradeGPA",
+      "notes": "Grade achieved in original system. Used for UK classification. NOTE: Double space in field name is intentional."
+    },
+    {
+      "fieldName": "Grade Achieved/Pending",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "GradeAchievedPending",
+      "appearsInOutput": true,
+      "outputColumnName": "DegreeStatus",
+      "notes": "Whether grade is 'Achieved' or 'Pending'"
+    },
+    {
+      "fieldName": "Total Mark equivalency",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Numeric equivalency of total mark. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Equivalency note",
+      "dataType": "string",
+      "currentlyUsed": true,
+      "mappedToProperty": "EquivalencyNote",
+      "appearsInOutput": true,
+      "outputColumnName": "EquivalencyNote",
+      "notes": "Detailed notes about grade equivalency and requirements"
+    },
+    {
+      "fieldName": "Admissions referral note",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Notes regarding admissions referral. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Admissions referred to department date",
+      "dataType": "date",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Date application was referred to department. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Department recommended decision",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Department's recommendation (e.g., 'Reject'). NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Department recommended decision date",
+      "dataType": "date",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Date of department recommendation. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Deposit due date",
+      "dataType": "date",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Date deposit payment is due. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Deposit payment status",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Status of deposit payment (e.g., 'Unpaid'). NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Initial decision",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Initial admissions decision code (e.g., 'R' for Reject). NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Initial Decision date",
+      "dataType": "date",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Date of initial decision. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Decision/Response",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Decision or applicant response code. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Reply by date",
+      "dataType": "date",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Date by which applicant must respond. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Academic year",
+      "dataType": "string/year",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Academic year of entry (e.g., '2026'). NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "Tag",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "Custom tag/label for application (e.g., 'b2 - 25 Nov'). NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "ELP type",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "English Language Proficiency type. NOT CURRENTLY USED."
+    },
+    {
+      "fieldName": "ELP verification status",
+      "dataType": "string",
+      "currentlyUsed": false,
+      "mappedToProperty": null,
+      "appearsInOutput": false,
+      "notes": "English Language Proficiency verification status (e.g., 'Not yet verified'). NOT CURRENTLY USED."
+    }
+  ],
+
+  "currentOutputStructure": {
+    "description": "Fields currently included in generated Excel output files",
+    "columns": [
+      "ReceivedDate (enriched)",
+      "DueDate (enriched)",
+      "StudentNo (from Applicant ID)",
+      "Programme",
+      "Forename",
+      "Surname",
+      "FeeStatus",
+      "QualificationName",
+      "DegreeSubject",
+      "InstitutionName",
+      "THERanking (enriched)",
+      "CountryOfStudy",
+      "EquivalencyNote",
+      "OverallGradeGPA",
+      "DegreeStatus (from Grade Achieved/Pending)",
+      "UKGrade (enriched)",
+      "Decision (empty - manual entry)",
+      "AT (empty - manual entry)",
+      "Note (empty - manual entry)",
+      "Progr. Adm (empty - manual entry)",
+      "Comment (empty - manual entry)"
+    ]
+  },
+
+  "extensionGuidelines": {
+    "description": "How to add additional fields to output reports (OCP-compliant approach)",
+    "philosophy": "Following the Open-Closed Principle, the system should be open for extension but closed for modification. New fields can be added without changing existing code structure.",
+
+    "steps": [
+      {
+        "step": 1,
+        "action": "Choose field from availableFields list above",
+        "example": "Email address"
+      },
+      {
+        "step": 2,
+        "action": "Add property to Models/ApplicationRecord.cs",
+        "code": "[Name(\"Email address\")]\npublic string? EmailAddress { get; set; }"
+      },
+      {
+        "step": 3,
+        "action": "Add property to Models/OutputRecord.cs",
+        "code": "public string? EmailAddress { get; set; }"
+      },
+      {
+        "step": 4,
+        "action": "Update Services/CsvService.cs - LoadApplicationRecordsFromExcel() method (line ~183-195)",
+        "code": "EmailAddress = GetValue(row, \"Email address\")"
+      },
+      {
+        "step": 5,
+        "action": "Add to ColumnOrder list in Services/CsvService.cs (line ~18-25)",
+        "code": "Insert \"EmailAddress\" at desired position in list"
+      },
+      {
+        "step": 6,
+        "action": "Update switch statement in GenerateOutputFiles() method (line ~241-260)",
+        "code": "\"EmailAddress\" => record.EmailAddress ?? \"\","
+      },
+      {
+        "step": 7,
+        "action": "Update MainWindow.axaml.cs data enrichment logic (line ~244-261) if needed",
+        "code": "EmailAddress = app.EmailAddress"
+      },
+      {
+        "step": 8,
+        "action": "(Optional) Add special formatting if needed",
+        "options": [
+          "Add to RightAlignedColumns set if right-aligned",
+          "Add to DateColumns set if date formatting needed",
+          "Add custom formatting logic in GenerateOutputFiles()"
+        ]
+      }
+    ],
+
+    "exampleImplementations": [
+      {
+        "useCase": "Add Email Address to output",
+        "fields": ["Email address"],
+        "position": "After Surname",
+        "complexity": "Simple - no special formatting",
+        "estimatedChanges": "5 files, ~10 lines of code"
+      },
+      {
+        "useCase": "Add Date of Birth to output",
+        "fields": ["Date of Birth"],
+        "position": "After Gender",
+        "complexity": "Medium - requires date parsing",
+        "estimatedChanges": "5 files, ~15 lines of code (including DateColumns set)"
+      },
+      {
+        "useCase": "Add decision tracking fields",
+        "fields": ["Department recommended decision", "Department recommended decision date", "Initial decision", "Initial Decision date"],
+        "position": "After UKGrade",
+        "complexity": "Medium - multiple fields with dates",
+        "estimatedChanges": "5 files, ~40 lines of code"
+      },
+      {
+        "useCase": "Add applicant contact details",
+        "fields": ["Email address", "Known as", "Country of Nationality"],
+        "position": "After Surname",
+        "complexity": "Simple - all text fields",
+        "estimatedChanges": "5 files, ~25 lines of code"
+      }
+    ]
+  },
+
+  "fieldCategories": {
+    "personalInformation": [
+      "Forename",
+      "Known as",
+      "Surname",
+      "Email address",
+      "Gender",
+      "Date of Birth",
+      "Country of Nationality"
+    ],
+    "applicationDetails": [
+      "Applicant ID",
+      "Programme",
+      "Mode of attendance",
+      "Location",
+      "State",
+      "Fee Status",
+      "Academic year",
+      "Tag"
+    ],
+    "qualificationDetails": [
+      "Qualification name",
+      "Degree subject",
+      "Institution name",
+      "Country of study",
+      "Qualification end date",
+      "Overall  grade/GPA",
+      "Grade Achieved/Pending",
+      "Total Mark equivalency",
+      "Equivalency note"
+    ],
+    "decisionTracking": [
+      "Admissions referral note",
+      "Admissions referred to department date",
+      "Department recommended decision",
+      "Department recommended decision date",
+      "Initial decision",
+      "Initial Decision date",
+      "Decision/Response",
+      "Reply by date"
+    ],
+    "financialTracking": [
+      "Deposit due date",
+      "Deposit payment status"
+    ],
+    "englishLanguage": [
+      "ELP type",
+      "ELP verification status"
+    ]
+  },
+
+  "implementationNotes": {
+    "dateFieldFormats": "Dates in source CSV use DD-MMM-YY format (e.g., '10-Jul-01', '30-Jun-23')",
+    "nullHandling": "All fields should be nullable (string?) to handle missing data gracefully",
+    "caseInsensitiveMatching": "CSV loading uses case-insensitive header matching",
+    "excelFormatting": "EPPlus is used for Excel generation with custom formatting per column",
+    "namingConvention": "Use exact CSV field names in [Name(\"...\")] attributes, use PascalCase for property names"
+  }
+}
