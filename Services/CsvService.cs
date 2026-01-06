@@ -28,10 +28,22 @@ namespace ADMerger.Services
         {
             "THERanking", "OverallGradeGPA", "DegreeStatus", "UKGrade"
         };
-        
+
         private static readonly HashSet<string> DateColumns = new HashSet<string>
         {
             "ReceivedDate", "DueDate"
+        };
+
+        // Additional field property names that should be formatted as dates
+        private static readonly HashSet<string> AdditionalDateFields = new HashSet<string>
+        {
+            "DateOfBirth",
+            "QualificationEndDate",
+            "AdmissionsReferredToDepartmentDate",
+            "DepartmentRecommendedDecisionDate",
+            "DepositDueDate",
+            "InitialDecisionDate",
+            "ReplyByDate"
         };
 
         public List<InTrayRecord> LoadInTrayRecords(string filePath)
@@ -261,11 +273,27 @@ namespace ADMerger.Services
                     for (int col = 0; col < dynamicColumnOrder.Count; col++)
                     {
                         var headerCell = worksheet.Cells[1, col + 1];
-                        headerCell.Value = dynamicColumnOrder[col];
+                        var columnName = dynamicColumnOrder[col];
+                        headerCell.Value = columnName;
                         headerCell.Style.Font.Bold = true;
                         headerCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        headerCell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(240, 240, 240));
-                        headerCell.Style.Font.Color.SetColor(System.Drawing.Color.Black);
+
+                        // Check if this is an additional field (not in original ColumnOrder)
+                        bool isAdditionalField = additionalFields != null && additionalFields.Contains(columnName);
+
+                        if (isAdditionalField)
+                        {
+                            // Highlight additional fields with a different color (light blue)
+                            headerCell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(220, 230, 241));
+                            headerCell.Style.Font.Color.SetColor(System.Drawing.Color.FromArgb(31, 78, 121));
+                        }
+                        else
+                        {
+                            // Standard header color (light gray)
+                            headerCell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(240, 240, 240));
+                            headerCell.Style.Font.Color.SetColor(System.Drawing.Color.Black);
+                        }
+
                         headerCell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
                         headerCell.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     }
@@ -327,6 +355,19 @@ namespace ADMerger.Services
                             }
                             else if (DateColumns.Contains(columnName) && !string.IsNullOrWhiteSpace(value))
                             {
+                                if (DateTime.TryParse(value, out DateTime dateValue))
+                                {
+                                    cell.Value = dateValue;
+                                    cell.Style.Numberformat.Format = "dd/mm/yyyy";
+                                }
+                                else
+                                {
+                                    cell.Value = value;
+                                }
+                            }
+                            else if (AdditionalDateFields.Contains(columnName) && !string.IsNullOrWhiteSpace(value))
+                            {
+                                // Format additional date fields (DateOfBirth, QualificationEndDate, etc.)
                                 if (DateTime.TryParse(value, out DateTime dateValue))
                                 {
                                     cell.Value = dateValue;

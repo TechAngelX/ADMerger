@@ -97,32 +97,23 @@
                                 <TextBlock Grid.Column="1" Grid.Row="0" Text="Application Details" FontWeight="SemiBold" Foreground="#475569" FontSize="12" Margin="0,0,0,8"/>
                                 <TextBlock Grid.Column="2" Grid.Row="0" Text="Decision Tracking" FontWeight="SemiBold" Foreground="#475569" FontSize="12" Margin="0,0,0,8"/>
 
-                                <ListBox x:Name="PersonalFieldsList" Grid.Column="0" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
-                                         SelectionMode="Multiple" Margin="0,0,10,0" Padding="5">
-                                    <ListBox.Styles>
-                                        <Style Selector="ListBoxItem">
-                                            <Setter Property="Padding" Value="8,6"/>
-                                        </Style>
-                                    </ListBox.Styles>
-                                </ListBox>
+                                <!-- Personal Fields with Checkboxes -->
+                                <ScrollViewer Grid.Column="0" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Margin="0,0,10,0"
+                                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <StackPanel x:Name="PersonalFieldsPanel" Margin="10"/>
+                                </ScrollViewer>
 
-                                <ListBox x:Name="ApplicationFieldsList" Grid.Column="1" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
-                                         SelectionMode="Multiple" Margin="0,0,10,0" Padding="5">
-                                    <ListBox.Styles>
-                                        <Style Selector="ListBoxItem">
-                                            <Setter Property="Padding" Value="8,6"/>
-                                        </Style>
-                                    </ListBox.Styles>
-                                </ListBox>
+                                <!-- Application Fields with Checkboxes -->
+                                <ScrollViewer Grid.Column="1" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Margin="0,0,10,0"
+                                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <StackPanel x:Name="ApplicationFieldsPanel" Margin="10"/>
+                                </ScrollViewer>
 
-                                <ListBox x:Name="DecisionFieldsList" Grid.Column="2" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
-                                         SelectionMode="Multiple" Padding="5">
-                                    <ListBox.Styles>
-                                        <Style Selector="ListBoxItem">
-                                            <Setter Property="Padding" Value="8,6"/>
-                                        </Style>
-                                    </ListBox.Styles>
-                                </ListBox>
+                                <!-- Decision Fields with Checkboxes -->
+                                <ScrollViewer Grid.Column="2" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
+                                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <StackPanel x:Name="DecisionFieldsPanel" Margin="10"/>
+                                </ScrollViewer>
                             </Grid>
                         </Border>
                     </Expander>

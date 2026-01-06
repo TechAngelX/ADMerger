@@ -189,18 +189,41 @@ public partial class MainWindow : Window
         _additionalFields.AddRange(applicationFields);
         _additionalFields.AddRange(decisionFields);
 
-        // Populate ListBoxes with display names
+        // Create checkboxes for each field
         foreach (var field in personalFields)
         {
-            PersonalFieldsList.Items.Add(field.DisplayName);
+            var checkbox = new CheckBox
+            {
+                Content = field.DisplayName,
+                Tag = field,
+                Margin = new Thickness(0, 4),
+                FontSize = 13
+            };
+            PersonalFieldsPanel.Children.Add(checkbox);
         }
+
         foreach (var field in applicationFields)
         {
-            ApplicationFieldsList.Items.Add(field.DisplayName);
+            var checkbox = new CheckBox
+            {
+                Content = field.DisplayName,
+                Tag = field,
+                Margin = new Thickness(0, 4),
+                FontSize = 13
+            };
+            ApplicationFieldsPanel.Children.Add(checkbox);
         }
+
         foreach (var field in decisionFields)
         {
-            DecisionFieldsList.Items.Add(field.DisplayName);
+            var checkbox = new CheckBox
+            {
+                Content = field.DisplayName,
+                Tag = field,
+                Margin = new Thickness(0, 4),
+                FontSize = 13
+            };
+            DecisionFieldsPanel.Children.Add(checkbox);
         }
     }
 
@@ -285,21 +308,19 @@ public partial class MainWindow : Window
 
         try
         {
-            // Get selected additional fields from UI
+            // Get selected additional fields from checked checkboxes
             List<string> selectedFieldNames = new List<string>();
-            var allSelectedItems = PersonalFieldsList.SelectedItems.Cast<object>()
-                .Concat(ApplicationFieldsList.SelectedItems.Cast<object>())
-                .Concat(DecisionFieldsList.SelectedItems.Cast<object>());
 
-            foreach (var selectedItem in allSelectedItems)
+            // Get all checkboxes from all three panels
+            var allCheckboxes = PersonalFieldsPanel.Children.OfType<CheckBox>()
+                .Concat(ApplicationFieldsPanel.Children.OfType<CheckBox>())
+                .Concat(DecisionFieldsPanel.Children.OfType<CheckBox>());
+
+            foreach (var checkbox in allCheckboxes)
             {
-                if (selectedItem is string displayName)
+                if (checkbox.IsChecked == true && checkbox.Tag is AdditionalField field)
                 {
-                    var field = _additionalFields.FirstOrDefault(f => f.DisplayName == displayName);
-                    if (field != null)
-                    {
-                        selectedFieldNames.Add(field.PropertyName);
-                    }
+                    selectedFieldNames.Add(field.PropertyName);
                 }
             }
 
