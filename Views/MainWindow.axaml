@@ -24,8 +24,8 @@
             </Border.Background>
         </Border>
 
-        <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="30,40,30,30">
-            
+        <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="30,40,30,30">
+
             <StackPanel Grid.Row="0" Margin="0,0,0,25">
                 <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                     <Border Background="#2563EB" CornerRadius="8" Width="40" Height="40">
@@ -78,52 +78,57 @@
                 </Border>
             </Grid>
 
-            <!-- Additional Fields Selection -->
-            <Expander Grid.Row="2" Margin="0,0,0,20" Background="#FFFFFF" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1">
-                <Expander.Header>
-                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="5">
-                        <TextBlock Text="⚙️" FontSize="16"/>
-                        <TextBlock Text="Additional Output Fields (Optional)" FontWeight="SemiBold" Foreground="#334155" VerticalAlignment="Center"/>
-                        <TextBlock Text="Select extra fields to include in output reports" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Expander.Header>
-                <Border BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="20,15" Background="#F8FAFC">
-                    <Grid ColumnDefinitions="*, *, *" RowDefinitions="Auto, 200">
-                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Personal Information" FontWeight="SemiBold" Foreground="#475569" FontSize="12" Margin="0,0,0,8"/>
-                        <TextBlock Grid.Column="1" Grid.Row="0" Text="Application Details" FontWeight="SemiBold" Foreground="#475569" FontSize="12" Margin="0,0,0,8"/>
-                        <TextBlock Grid.Column="2" Grid.Row="0" Text="Decision Tracking" FontWeight="SemiBold" Foreground="#475569" FontSize="12" Margin="0,0,0,8"/>
+            <!-- Scrollable content area with Additional Fields and Data List -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="20">
 
-                        <ListBox x:Name="PersonalFieldsList" Grid.Column="0" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
-                                 SelectionMode="Multiple" Margin="0,0,10,0" Padding="5">
-                            <ListBox.Styles>
-                                <Style Selector="ListBoxItem">
-                                    <Setter Property="Padding" Value="8,6"/>
-                                </Style>
-                            </ListBox.Styles>
-                        </ListBox>
+                    <!-- Additional Fields Selection -->
+                    <Expander Margin="0,0,0,0" Background="#FFFFFF" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1">
+                        <Expander.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="5">
+                                <TextBlock Text="⚙️" FontSize="16"/>
+                                <TextBlock Text="Additional Output Fields (Optional)" FontWeight="SemiBold" Foreground="#334155" VerticalAlignment="Center"/>
+                                <TextBlock Text="Select extra fields to include in output reports" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Expander.Header>
+                        <Border BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="20,15" Background="#F8FAFC">
+                            <Grid ColumnDefinitions="*, *, *" RowDefinitions="Auto, 200">
+                                <TextBlock Grid.Column="0" Grid.Row="0" Text="Personal Information" FontWeight="SemiBold" Foreground="#475569" FontSize="12" Margin="0,0,0,8"/>
+                                <TextBlock Grid.Column="1" Grid.Row="0" Text="Application Details" FontWeight="SemiBold" Foreground="#475569" FontSize="12" Margin="0,0,0,8"/>
+                                <TextBlock Grid.Column="2" Grid.Row="0" Text="Decision Tracking" FontWeight="SemiBold" Foreground="#475569" FontSize="12" Margin="0,0,0,8"/>
 
-                        <ListBox x:Name="ApplicationFieldsList" Grid.Column="1" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
-                                 SelectionMode="Multiple" Margin="0,0,10,0" Padding="5">
-                            <ListBox.Styles>
-                                <Style Selector="ListBoxItem">
-                                    <Setter Property="Padding" Value="8,6"/>
-                                </Style>
-                            </ListBox.Styles>
-                        </ListBox>
+                                <ListBox x:Name="PersonalFieldsList" Grid.Column="0" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
+                                         SelectionMode="Multiple" Margin="0,0,10,0" Padding="5">
+                                    <ListBox.Styles>
+                                        <Style Selector="ListBoxItem">
+                                            <Setter Property="Padding" Value="8,6"/>
+                                        </Style>
+                                    </ListBox.Styles>
+                                </ListBox>
 
-                        <ListBox x:Name="DecisionFieldsList" Grid.Column="2" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
-                                 SelectionMode="Multiple" Padding="5">
-                            <ListBox.Styles>
-                                <Style Selector="ListBoxItem">
-                                    <Setter Property="Padding" Value="8,6"/>
-                                </Style>
-                            </ListBox.Styles>
-                        </ListBox>
-                    </Grid>
-                </Border>
-            </Expander>
+                                <ListBox x:Name="ApplicationFieldsList" Grid.Column="1" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
+                                         SelectionMode="Multiple" Margin="0,0,10,0" Padding="5">
+                                    <ListBox.Styles>
+                                        <Style Selector="ListBoxItem">
+                                            <Setter Property="Padding" Value="8,6"/>
+                                        </Style>
+                                    </ListBox.Styles>
+                                </ListBox>
 
-            <Border Grid.Row="3" Classes="GlassCard" Padding="0" ClipToBounds="True">
+                                <ListBox x:Name="DecisionFieldsList" Grid.Column="2" Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6"
+                                         SelectionMode="Multiple" Padding="5">
+                                    <ListBox.Styles>
+                                        <Style Selector="ListBoxItem">
+                                            <Setter Property="Padding" Value="8,6"/>
+                                        </Style>
+                                    </ListBox.Styles>
+                                </ListBox>
+                            </Grid>
+                        </Border>
+                    </Expander>
+
+                    <!-- Data List -->
+                    <Border Classes="GlassCard" Padding="0" ClipToBounds="True" MinHeight="300">
                 <Grid RowDefinitions="Auto, *">
                     
                     <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="15,10">
@@ -181,7 +186,10 @@
                 </Grid>
             </Border>
 
-            <StackPanel Grid.Row="4" Margin="0,20,0,0" Spacing="15">
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="3" Margin="0,20,0,0" Spacing="15">
                 
                 <Grid ColumnDefinitions="*, Auto">
                     <TextBlock x:Name="StatusLabel" Text="Ready to start" VerticalAlignment="Center" Foreground="#64748B" FontWeight="Medium"/>
@@ -191,35 +199,36 @@
                 <ProgressBar x:Name="MainProgressBar" Height="6" CornerRadius="3" 
                              Foreground="#2563EB" Background="#E2E8F0" Value="0"/>
 
-                <Grid ColumnDefinitions="*, 20, Auto, 10, Auto">
-                    <Button x:Name="ProcessButton" Grid.Column="0" Classes="Modern" 
+                <Grid ColumnDefinitions="*, 20, Auto, 10, Auto, 10, Auto">
+                    <Button x:Name="ProcessButton" Grid.Column="0" Classes="Modern"
                             Content="▶  Process Records" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                             Background="#10B981" IsEnabled="False"/>
-                    
-                    <Button x:Name="ResetButton" Grid.Column="2" Classes="Modern" 
+
+                    <Button x:Name="ResetButton" Grid.Column="2" Classes="Modern"
                             Content="↺ Reset" Background="#64748B"/>
-                    
-                    <Button x:Name="ExitButton" Grid.Column="4" Classes="Modern" 
+
+                    <Button x:Name="ExitButton" Grid.Column="4" Classes="Modern"
                             Content="✕ Exit" Background="#EF4444"/>
+
                 </Grid>
+
+                <!-- System Log Expander -->
+                <Expander Background="#EEF2FF" CornerRadius="8" BorderBrush="#C7D2FE" BorderThickness="1" Padding="5">
+                    <Expander.Header>
+                        <TextBlock Text="📋 System Log" FontSize="12" Foreground="#6366F1" FontWeight="SemiBold"/>
+                    </Expander.Header>
+                    <Border Background="White" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1" Margin="5">
+                        <Grid RowDefinitions="Auto, 150">
+                            <Button x:Name="ClearLogButton" Grid.Row="0" Content="Clear" FontSize="10"
+                                    HorizontalAlignment="Right" Margin="5"/>
+                            <TextBox x:Name="StatusLog" Grid.Row="1" IsReadOnly="True"
+                                     Background="Transparent" BorderThickness="0"
+                                     FontFamily="Consolas" FontSize="11" Margin="5"/>
+                        </Grid>
+                    </Border>
+                </Expander>
             </StackPanel>
 
-            <Expander Grid.Row="3" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="20" Background="#EEF2FF" CornerRadius="8">
-                <Expander.Header>
-                    <TextBlock Text="System Log" FontSize="12" Foreground="#6366F1"/>
-                </Expander.Header>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="150"/>
-                    </Grid.RowDefinitions>
-                     <Button x:Name="ClearLogButton" Content="Clear" FontSize="10" HorizontalAlignment="Right" Margin="0,0,10,0"/>
-                    <TextBox x:Name="StatusLog" Grid.Row="1" IsReadOnly="True" 
-                             Background="White" BorderThickness="0" 
-                             FontFamily="Consolas" FontSize="11"/>
-                </Grid>
-            </Expander>
-            
         </Grid>
     </Panel>
 </Window>
