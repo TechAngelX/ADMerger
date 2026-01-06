@@ -92,6 +92,13 @@ public class ProcessingItem : INotifyPropertyChanged
     protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
+public class AdditionalField
+{
+    public string DisplayName { get; set; } = "";
+    public string PropertyName { get; set; } = "";
+    public string Category { get; set; } = "";
+}
+
 public partial class MainWindow : Window
 {
     private readonly ICsvService _csvService;
@@ -109,6 +116,8 @@ public partial class MainWindow : Window
     private bool _rankingsLoaded = false;
     public ObservableCollection<ProcessingItem> ProcessingItems { get; set; } = new ObservableCollection<ProcessingItem>();
 
+    private readonly List<AdditionalField> _additionalFields = new List<AdditionalField>();
+
     [DllImport("winmm.dll")]
     private static extern long mciSendString(string strCommand, StringBuilder? strReturn, int iReturnLength, IntPtr hwndCallback);
 
@@ -123,6 +132,7 @@ public partial class MainWindow : Window
         _gradeService = new GradeClassificationService(_equivalencyService);
 
         SetVersion();
+        InitializeAdditionalFields();
         InitializeDataAsync();
 
         BrowseInTrayButton.Click += BrowseInTrayButton_Click;
@@ -132,6 +142,66 @@ public partial class MainWindow : Window
         ClearLogButton.Click += ClearLogButton_Click;
         ResetButton.Click += ResetButton_Click;
         ExitButton.Click += ExitButton_Click;
+    }
+
+    private void InitializeAdditionalFields()
+    {
+        // Personal Information fields
+        var personalFields = new List<AdditionalField>
+        {
+            new AdditionalField { DisplayName = "Known as", PropertyName = "KnownAs", Category = "Personal" },
+            new AdditionalField { DisplayName = "Email address", PropertyName = "EmailAddress", Category = "Personal" },
+            new AdditionalField { DisplayName = "Gender", PropertyName = "Gender", Category = "Personal" },
+            new AdditionalField { DisplayName = "Date of Birth", PropertyName = "DateOfBirth", Category = "Personal" },
+            new AdditionalField { DisplayName = "Country of Nationality", PropertyName = "CountryOfNationality", Category = "Personal" }
+        };
+
+        // Application Details fields
+        var applicationFields = new List<AdditionalField>
+        {
+            new AdditionalField { DisplayName = "Mode of attendance", PropertyName = "ModeOfAttendance", Category = "Application" },
+            new AdditionalField { DisplayName = "Location", PropertyName = "Location", Category = "Application" },
+            new AdditionalField { DisplayName = "State", PropertyName = "State", Category = "Application" },
+            new AdditionalField { DisplayName = "Academic year", PropertyName = "AcademicYear", Category = "Application" },
+            new AdditionalField { DisplayName = "Tag", PropertyName = "Tag", Category = "Application" },
+            new AdditionalField { DisplayName = "Qualification end date", PropertyName = "QualificationEndDate", Category = "Application" },
+            new AdditionalField { DisplayName = "Total Mark equivalency", PropertyName = "TotalMarkEquivalency", Category = "Application" },
+            new AdditionalField { DisplayName = "ELP type", PropertyName = "ELPType", Category = "Application" },
+            new AdditionalField { DisplayName = "ELP verification status", PropertyName = "ELPVerificationStatus", Category = "Application" }
+        };
+
+        // Decision Tracking fields
+        var decisionFields = new List<AdditionalField>
+        {
+            new AdditionalField { DisplayName = "Admissions referral note", PropertyName = "AdmissionsReferralNote", Category = "Decision" },
+            new AdditionalField { DisplayName = "Admissions referred to dept date", PropertyName = "AdmissionsReferredToDepartmentDate", Category = "Decision" },
+            new AdditionalField { DisplayName = "Department recommended decision", PropertyName = "DepartmentRecommendedDecision", Category = "Decision" },
+            new AdditionalField { DisplayName = "Department recommended decision date", PropertyName = "DepartmentRecommendedDecisionDate", Category = "Decision" },
+            new AdditionalField { DisplayName = "Deposit due date", PropertyName = "DepositDueDate", Category = "Decision" },
+            new AdditionalField { DisplayName = "Deposit payment status", PropertyName = "DepositPaymentStatus", Category = "Decision" },
+            new AdditionalField { DisplayName = "Initial decision", PropertyName = "InitialDecision", Category = "Decision" },
+            new AdditionalField { DisplayName = "Initial Decision date", PropertyName = "InitialDecisionDate", Category = "Decision" },
+            new AdditionalField { DisplayName = "Decision/Response", PropertyName = "DecisionResponse", Category = "Decision" },
+            new AdditionalField { DisplayName = "Reply by date", PropertyName = "ReplyByDate", Category = "Decision" }
+        };
+
+        _additionalFields.AddRange(personalFields);
+        _additionalFields.AddRange(applicationFields);
+        _additionalFields.AddRange(decisionFields);
+
+        // Populate ListBoxes with display names
+        foreach (var field in personalFields)
+        {
+            PersonalFieldsList.Items.Add(field.DisplayName);
+        }
+        foreach (var field in applicationFields)
+        {
+            ApplicationFieldsList.Items.Add(field.DisplayName);
+        }
+        foreach (var field in decisionFields)
+        {
+            DecisionFieldsList.Items.Add(field.DisplayName);
+        }
     }
 
     private async void InitializeDataAsync()
@@ -215,6 +285,24 @@ public partial class MainWindow : Window
 
         try
         {
+            // Get selected additional fields from UI
+            List<string> selectedFieldNames = new List<string>();
+            var allSelectedItems = PersonalFieldsList.SelectedItems.Cast<object>()
+                .Concat(ApplicationFieldsList.SelectedItems.Cast<object>())
+                .Concat(DecisionFieldsList.SelectedItems.Cast<object>());
+
+            foreach (var selectedItem in allSelectedItems)
+            {
+                if (selectedItem is string displayName)
+                {
+                    var field = _additionalFields.FirstOrDefault(f => f.DisplayName == displayName);
+                    if (field != null)
+                    {
+                        selectedFieldNames.Add(field.PropertyName);
+                    }
+                }
+            }
+
             await Task.Run(async () => {
                 var inTrayRecords = _csvService.LoadInTrayRecords(_inTrayFilePath);
                 var appRecords = _csvService.LoadApplicationRecords(_appReportsFilePath);
@@ -241,7 +329,7 @@ public partial class MainWindow : Window
                     {
                         classification = _gradeService.DetermineUKClassification(app.OverallGradeGPA ?? "", app.EquivalencyNote ?? "", app.CountryOfStudy ?? "", app.QualificationName ?? "");
 
-                        outputRecords.Add(new OutputRecord {
+                        var outputRecord = new OutputRecord {
                             ReceivedDate = DateFormatter.FormatDate(inTray.ReceivedOn ?? ""),
                             DueDate = DateFormatter.CalculateDueDate(inTray.ReceivedOn ?? ""),
                             StudentNo = inTray.StudentNo,
@@ -258,7 +346,20 @@ public partial class MainWindow : Window
                             OverallGradeGPA = app.OverallGradeGPA,
                             DegreeStatus = app.GradeAchievedPending,
                             UKGrade = classification
-                        });
+                        };
+
+                        // Populate additional fields using reflection
+                        foreach (var propertyName in selectedFieldNames)
+                        {
+                            var property = typeof(ApplicationRecord).GetProperty(propertyName);
+                            if (property != null)
+                            {
+                                var value = property.GetValue(app) as string;
+                                outputRecord.AdditionalFieldValues[propertyName] = value;
+                            }
+                        }
+
+                        outputRecords.Add(outputRecord);
                     }
 
                     await Dispatcher.UIThread.InvokeAsync(() => {
@@ -269,7 +370,7 @@ public partial class MainWindow : Window
                     });
                 }
 
-                _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
+                _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath, selectedFieldNames.Count > 0 ? selectedFieldNames : null);
 
                 if (!token.IsCancellationRequested)
                 {

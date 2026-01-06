@@ -191,7 +191,33 @@ namespace ADMerger.Services
                         CountryOfStudy = GetValue(row, "Country of study"),
                         OverallGradeGPA = GetValue(row, "Overall  grade/GPA"),
                         EquivalencyNote = GetValue(row, "Equivalency note"),
-                        GradeAchievedPending = GetValue(row, "Grade Achieved/Pending")
+                        GradeAchievedPending = GetValue(row, "Grade Achieved/Pending"),
+
+                        // Additional optional fields
+                        KnownAs = GetValue(row, "Known as"),
+                        ModeOfAttendance = GetValue(row, "Mode of attendance"),
+                        Location = GetValue(row, "Location"),
+                        State = GetValue(row, "State"),
+                        EmailAddress = GetValue(row, "Email address"),
+                        Gender = GetValue(row, "Gender"),
+                        DateOfBirth = GetValue(row, "Date of Birth"),
+                        CountryOfNationality = GetValue(row, "Country of Nationality"),
+                        QualificationEndDate = GetValue(row, "Qualification end date"),
+                        TotalMarkEquivalency = GetValue(row, "Total Mark equivalency"),
+                        AdmissionsReferralNote = GetValue(row, "Admissions referral note"),
+                        AdmissionsReferredToDepartmentDate = GetValue(row, "Admissions referred to department date"),
+                        DepartmentRecommendedDecision = GetValue(row, "Department recommended decision"),
+                        DepartmentRecommendedDecisionDate = GetValue(row, "Department recommended decision date"),
+                        DepositDueDate = GetValue(row, "Deposit due date"),
+                        DepositPaymentStatus = GetValue(row, "Deposit payment status"),
+                        InitialDecision = GetValue(row, "Initial decision"),
+                        InitialDecisionDate = GetValue(row, "Initial Decision date"),
+                        DecisionResponse = GetValue(row, "Decision/Response"),
+                        ReplyByDate = GetValue(row, "Reply by date"),
+                        AcademicYear = GetValue(row, "Academic year"),
+                        Tag = GetValue(row, "Tag"),
+                        ELPType = GetValue(row, "ELP type"),
+                        ELPVerificationStatus = GetValue(row, "ELP verification status")
                     };
                     records.Add(record);
                 }
@@ -200,30 +226,42 @@ namespace ADMerger.Services
             return records;
         }
         
-        public List<string> GenerateOutputFiles(List<OutputRecord> data, string outputFolderPath)
+        public List<string> GenerateOutputFiles(List<OutputRecord> data, string outputFolderPath, List<string>? additionalFields = null)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            
+
+            // Build dynamic column order: standard columns + additional fields + manual entry columns
+            var dynamicColumnOrder = new List<string>(ColumnOrder);
+
+            // Insert additional fields before the manual entry columns (Decision, AT, Note, etc.)
+            int insertIndex = dynamicColumnOrder.IndexOf("Decision");
+            if (insertIndex < 0) insertIndex = dynamicColumnOrder.Count;
+
+            if (additionalFields != null && additionalFields.Count > 0)
+            {
+                dynamicColumnOrder.InsertRange(insertIndex, additionalFields);
+            }
+
             var programmeGroups = data.GroupBy(record => record.Programme).ToList();
             var outputPaths = new List<string>();
-            
+
             foreach (var group in programmeGroups)
             {
                 var programme = group.Key;
                 var records = group.OrderBy(r => ParseDate(r.ReceivedDate)).ToList();
-                
+
                 var outputPath = Path.Combine(
-                    outputFolderPath, 
+                    outputFolderPath,
                     programme + "_Latest_" + DateTime.Now.ToString("dd_MMM_yyyy_HHmm") + ".xlsx");
-                
+
                 using (var package = new ExcelPackage())
                 {
                     var worksheet = package.Workbook.Worksheets.Add(programme);
-                    
-                    for (int col = 0; col < ColumnOrder.Count; col++)
+
+                    for (int col = 0; col < dynamicColumnOrder.Count; col++)
                     {
                         var headerCell = worksheet.Cells[1, col + 1];
-                        headerCell.Value = ColumnOrder[col];
+                        headerCell.Value = dynamicColumnOrder[col];
                         headerCell.Style.Font.Bold = true;
                         headerCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         headerCell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(240, 240, 240));
@@ -235,9 +273,9 @@ namespace ADMerger.Services
                     int row = 2;
                     foreach (var record in records)
                     {
-                        for (int col = 0; col < ColumnOrder.Count; col++)
+                        for (int col = 0; col < dynamicColumnOrder.Count; col++)
                         {
-                            string columnName = ColumnOrder[col];
+                            string columnName = dynamicColumnOrder[col];
                             string value = columnName switch
                             {
                                 "ReceivedDate" => record.ReceivedDate ?? "",
@@ -256,7 +294,7 @@ namespace ADMerger.Services
                                 "OverallGradeGPA" => record.OverallGradeGPA ?? "",
                                 "DegreeStatus" => record.DegreeStatus ?? "",
                                 "UKGrade" => record.UKGrade ?? "",
-                                _ => ""
+                                _ => record.AdditionalFieldValues.ContainsKey(columnName) ? record.AdditionalFieldValues[columnName] ?? "" : ""
                             };
                             
                             var cell = worksheet.Cells[row, col + 1];
@@ -339,9 +377,9 @@ namespace ADMerger.Services
                         ignoredError.NumberStoredAsText = true;
                     }
                     
-                    for (int col = 1; col <= ColumnOrder.Count; col++)
+                    for (int col = 1; col <= dynamicColumnOrder.Count; col++)
                     {
-                        string columnName = ColumnOrder[col - 1];
+                        string columnName = dynamicColumnOrder[col - 1];
                         if (columnName == "EquivalencyNote")
                         {
                             worksheet.Column(col).Width = 18;

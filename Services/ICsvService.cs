@@ -9,5 +9,6 @@ namespace ADMerger.Services
     {
         List<InTrayRecord> LoadInTrayRecords(string filePath);
         List<ApplicationRecord> LoadApplicationRecords(string filePath);
-List<string> GenerateOutputFiles(List<OutputRecord> data, string outputFolderPath);    }
+        List<string> GenerateOutputFiles(List<OutputRecord> data, string outputFolderPath, List<string>? additionalFields = null);
+    }
 }
