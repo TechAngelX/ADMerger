@@ -2,6 +2,7 @@
 [Bb]in/
 
 [Oo]bj/
+nonUploadable/
 [Dd]ebug/
 [Rr]elease/
 x64/
@@ -9,7 +10,7 @@ x86/
 *.exe
 *.dll
 *.pdb
-
+*.psd
 # Visual Studio
 .vs/
 *.user
@@ -52,3 +53,5 @@ nonuploadable/
 # Office temp files
 ~$*.xlsx
 ~$*.docx
+non/uploadable/*
+nonUploadable/
