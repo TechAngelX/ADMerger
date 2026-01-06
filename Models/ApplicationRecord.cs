@@ -1,4 +1,5 @@
 ﻿// Models/ApplicationRecord.cs
+// © Ricki Angel 2026 | TechAngelX
 
 using CsvHelper.Configuration.Attributes;
 

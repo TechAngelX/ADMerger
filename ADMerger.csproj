@@ -6,9 +6,14 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    
+
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <GenerateProgramFile>false</GenerateProgramFile>
+
+    <Authors>Ricki Angel</Authors>
+    <Company>TechAngelX</Company>
+    <Copyright>© Ricki Angel 2026 | TechAngelX</Copyright>
+    <Product>ADMerger</Product>
 
     <Version>1.0.$([System.DateTime]::UtcNow.ToString("yy"))</Version>
     <AssemblyVersion>1.0.$([System.DateTime]::UtcNow.ToString("yy"))</AssemblyVersion>

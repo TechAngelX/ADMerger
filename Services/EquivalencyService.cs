@@ -1,4 +1,5 @@
 // Services/EquivalencyService.cs
+// © Ricki Angel 2026 | TechAngelX
 
 using System;
 using System.Collections.Generic;

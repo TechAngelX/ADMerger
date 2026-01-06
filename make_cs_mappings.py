@@ -1,3 +1,7 @@
+# © Ricki Angel 2026 | TechAngelX
+# Converts institution alias mappings CSV into a C# dictionary for lookup.
+
+
 import csv
 import os
 import sys

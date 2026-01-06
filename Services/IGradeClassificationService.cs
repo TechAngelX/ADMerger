@@ -1,4 +1,5 @@
 // Services/IGradeClassificationService.cs
+// © Ricki Angel 2026 | TechAngelX
 
 namespace ADMerger.Services
 {

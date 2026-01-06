@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Field headings reference for ADMerger application, for Open-Closed Principle (OCP) design practices. This file documents all available fields from the Department Application Reports CSV file to support future customisation and bespoke output reports.",
+  "description": "Field headings reference for ADMerger application, for OCP design practices. This file documents all available fields from the Department Application Reports CSV file to support future customisation and bespoke output reports.",
   "version": "1.0",
   "sourceFile": "Department_Application_Reports_Computer_Science.csv",
   "lastUpdated": "2026-01-06",

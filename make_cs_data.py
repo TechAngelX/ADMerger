@@ -1,3 +1,8 @@
+# © Ricki Angel 2026 | TechAngelX
+# Converts a 2026 THE ranking CSV/XLSX into a C# institution-to-rank dictionary.
+
+
+
 import os
 import glob
 import sys

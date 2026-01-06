@@ -1,4 +1,5 @@
 // Views/MainWindow.axaml.cs
+// © Ricki Angel 2026 | TechAngelX
 
 using Avalonia;
 using Avalonia.Controls;

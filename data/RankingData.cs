@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+// © Ricki Angel 2026 | TechAngelX
+// Contains 2,600 compiled records based on the 2026 THE World University Rankings
+// https://www.timeshighereducation.com/world-university-rankings/latest/world-ranking
 
 namespace ADMerger.data;
 

@@ -1,3 +1,9 @@
+# © Ricki Angel 2026 | TechAngelX
+# Generates a C# equivalency dictionary from a CSV of country degree mappings.
+
+import pandas as pd
+import os
+
 import pandas as pd
 import os
 

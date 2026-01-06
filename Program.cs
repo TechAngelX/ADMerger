@@ -1,4 +1,6 @@
-﻿// Program.cs
+﻿// © Ricki Angel 2026 | TechAngelX
+// All rights reserved.
+// Program.cs - the e C# program entry point that initialises and starts the Avalonia UI application.
 
 using Avalonia;
 using System;
