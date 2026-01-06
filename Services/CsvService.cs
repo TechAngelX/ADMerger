@@ -242,16 +242,13 @@ namespace ADMerger.Services
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-            // Build dynamic column order: standard columns + additional fields + manual entry columns
+            // Build dynamic column order: standard columns + manual entry columns + additional fields at the end
             var dynamicColumnOrder = new List<string>(ColumnOrder);
 
-            // Insert additional fields before the manual entry columns (Decision, AT, Note, etc.)
-            int insertIndex = dynamicColumnOrder.IndexOf("Decision");
-            if (insertIndex < 0) insertIndex = dynamicColumnOrder.Count;
-
+            // Add additional fields at the very end (after "Comment")
             if (additionalFields != null && additionalFields.Count > 0)
             {
-                dynamicColumnOrder.InsertRange(insertIndex, additionalFields);
+                dynamicColumnOrder.AddRange(additionalFields);
             }
 
             var programmeGroups = data.GroupBy(record => record.Programme).ToList();

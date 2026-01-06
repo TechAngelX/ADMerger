@@ -526,6 +526,20 @@ private void SetVersion()
         FooterStatus.Text = "Ready";
         StatusLog.Text = string.Empty;
 
+        // Clear all additional field checkboxes
+        foreach (var checkbox in PersonalFieldsPanel.Children.OfType<CheckBox>())
+        {
+            checkbox.IsChecked = false;
+        }
+        foreach (var checkbox in ApplicationFieldsPanel.Children.OfType<CheckBox>())
+        {
+            checkbox.IsChecked = false;
+        }
+        foreach (var checkbox in DecisionFieldsPanel.Children.OfType<CheckBox>())
+        {
+            checkbox.IsChecked = false;
+        }
+
         CheckReadyToProcess();
         LogStatus("Application reset.");
     }

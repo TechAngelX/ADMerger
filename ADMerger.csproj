@@ -14,7 +14,7 @@
     <AssemblyVersion>1.0.$([System.DateTime]::UtcNow.ToString("yy"))</AssemblyVersion>
     <FileVersion>1.0.$([System.DateTime]::UtcNow.ToString("yy"))</FileVersion>
     <InformationalVersion>1.0.$([System.DateTime]::UtcNow.ToString("yyMMdd"))</InformationalVersion>
-    
+
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
