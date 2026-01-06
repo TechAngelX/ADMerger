@@ -2,14 +2,19 @@
 
 ## Files
 - `app-icon.svg` - Source SVG icon (512x512)
+- `app-icon.icns` - macOS icon file ✓ (ready to use)
 
-## Quick Start
-After converting the SVG to .ico format (see instructions below), add this line to ADMerger.csproj in the `<PropertyGroup>` section:
+## macOS Icon
+The `.icns` file has been created and is automatically included by the `goDeployMAC.sh` build script.
+No additional steps needed!
+
+## Windows Icon
+To add a Windows icon, convert the SVG to .ico format and add this line to ADMerger.csproj:
 ```xml
 <ApplicationIcon>Assets/app-icon.ico</ApplicationIcon>
 ```
 
-## Converting SVG to Platform-Specific Icons
+## Converting SVG to Platform-Specific Icons (Reference)
 
 ### For macOS (.icns)
 ```bash

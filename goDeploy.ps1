@@ -3,8 +3,8 @@ Write-Host "   AD Merger - Building Standalone EXE    " -ForegroundColor Cyan
 Write-Host "===========================================" -ForegroundColor Cyan
 Write-Host ""
 
-$projectPath = "C:\Users\Ricki\Documents\LOCALDEV-PC\ADMerger"
-$desktopPath = "C:\Users\Ricki\Desktop"
+$projectPath = Get-Location
+$buildDir = "$env:USERPROFILE\Desktop\ADMerger_Build"
 
 Write-Host "Checking for running ADMerger processes..." -ForegroundColor Yellow
 $runningProcesses = Get-Process -Name "ADMerger" -ErrorAction SilentlyContinue
@@ -22,30 +22,26 @@ if ($excelProcesses) {
 }
 
 Write-Host "Cleaning previous builds..." -ForegroundColor Yellow
-Set-Location $projectPath
+if (Test-Path $buildDir) {
+    Remove-Item $buildDir -Recurse -Force
+}
+New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
+
 dotnet clean
 
 Write-Host "Publishing standalone executable with embedded data..." -ForegroundColor Yellow
 dotnet publish -c Release -r win-x64 --self-contained true `
     -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
-    -p:EnableCompressionInSingleFile=true
+    -p:EnableCompressionInSingleFile=true `
+    -o $buildDir
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✓ Build successful!" -ForegroundColor Green
-    
-    # FIXED: Changed net9.0-windows to net10.0
-    $publishFolder = "$projectPath\bin\Release\net10.0\win-x64\publish"
-    $publishedExe = Get-ChildItem -Path "$publishFolder\ADMerger.exe" -ErrorAction SilentlyContinue
+
+    $publishedExe = Get-ChildItem -Path "$buildDir\ADMerger.exe" -ErrorAction SilentlyContinue
 
     if ($publishedExe) {
-        $desktopExe = "$desktopPath\ADMerger.exe"
-
-        if (Test-Path $desktopExe) {
-            Remove-Item $desktopExe -Force
-        }
-
-        Copy-Item $publishedExe.FullName -Destination $desktopExe -Force
         $fileSize = [math]::Round($publishedExe.Length / 1MB, 2)
 
         Write-Host ""
@@ -54,7 +50,7 @@ if ($LASTEXITCODE -eq 0) {
         Write-Host "===========================================" -ForegroundColor Green
         Write-Host ""
         Write-Host "Standalone executable created:" -ForegroundColor White
-        Write-Host "  $desktopExe" -ForegroundColor Cyan
+        Write-Host "  $buildDir\ADMerger.exe" -ForegroundColor Cyan
         Write-Host ""
         Write-Host "File size: $fileSize MB" -ForegroundColor White
         Write-Host ""
@@ -66,10 +62,9 @@ if ($LASTEXITCODE -eq 0) {
         Write-Host "✓ No external files needed!" -ForegroundColor Green
         Write-Host "✓ Single file - ready to share!" -ForegroundColor Green
         Write-Host ""
-        Write-Host "🚀 Send ADMerger.exe to friends - it's 100% standalone!" -ForegroundColor Yellow
     } else {
         Write-Host "ERROR: Could not find published executable!" -ForegroundColor Red
-        Write-Host "Expected at: $publishFolder\ADMerger.exe" -ForegroundColor Yellow
+        Write-Host "Expected at: $buildDir\ADMerger.exe" -ForegroundColor Yellow
     }
 } else {
     Write-Host ""
