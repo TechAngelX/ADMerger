@@ -111,98 +111,89 @@ Southwestern University of Finance and Economics,NOT_RANKED,NotRanked
 - **Range**: Band ranking (601-800, 1001-1200)
 - **Reporter**: Participated in THE process but not ranked
 - **NR**: Not found in THE Rankings
+***
+## Prerequisites ##
+#### Before installing, please read... ####
 
-## Prerequisites
+### Required Software:
+Whether on Mac or Windows, you need to have the .NET 10 framework installed first. Install the framework on Terminal (Mac) or Powershghell / WSL / Windows CLI.
 
-### Required Software
-Tested on macOS Sonoma and Windows 11 or later. It may work on Windows 10 or earlier macOS versions, but this is not guaranteed. Whether on Mac or Windows, you need to have the .NET 10 framework installed first. Install the framework on Terminal (Mac) or Powershghell / WSL / Windows CLI
+This application has been tested on macOS Sonoma / Windows 11 or later. It may work on Windows 10 or earlier macOS versions, but this is not guaranteed.
 
 **macOS:**
+
 ```bash
-# Install via Homebrew
+# Open Terminal and Install via Homebrew
 brew install dotnet@10
 
 # Or download installer from:
-# https://dotnet.microsoft.com/download/dotnet/10.0
+https://dotnet.microsoft.com/download/dotnet/10.0
 
 # Verify installation
 dotnet --version  # Should show 10.0.x
 ```
-
-**Windows:**
+**Windows 11:**
 1. Download .NET 10.0 SDK from: https://dotnet.microsoft.com/download/dotnet/10.0
 2. Run the installer and follow prompts
 3. Verify installation:
 ```powershell
 dotnet --version  # Should show 10.0.x
 ```
-
-## Installation
-
+***
+## Installation (MacOS Sonoma)
+Assuming you already have dotnet@10 installed (see Prerequisites).
 ```bash
-# Clone the repository
+#Open Terminal and clone the repository
 git clone https://github.com/TechAngelX/ADMerger.git
 cd ADMerger
 
-# Run in development mode
+# Build the app, and run in development mode
 dotnet run
 
-# Or build standalone application
-**macOS:**
-./goDeployMAC.sh       # Creates a Mac Standalone executable file.
-**Note:** The `goDeployMAC.sh` script is already executable when cloned. If you downloaded the project as a zip file, you may need to run `chmod +x goDeployMAC.sh` first.
-*
-**Windows 11:**
-* macOs
-.\goDeploy.ps1         # Windoes - Creates a standalone EXE file in `%USERPROFILE%\Desktop\ADMerger_Build\
+# Or better still, build a standalone desktop application
+./goDeployMAC.sh       
 ```
+This creates a standalone executable file on your desktop in `~/Desktop/ADMerger_Build/` with: `ADMerger.app` - macOS application bundle with all dependencies.
 
+**Note:** The `goDeployMAC.sh` script is already executable when cloned, but you may get a 'Permission Denied' pop-up - common if you downloaded the ZIP. If you get this error, run `chmod +x goDeployMAC.sh` before executing it with `./goDeployMAC.sh`.
 
-```powershell
-.\goDeploy.ps1
-```
-
-Creates a clean build in  with:
-- `ADMerger.exe` - Standalone executable with all data files embedded
-
-**Build Configuration:**
-- Target: .NET 10.0 Windows
-- Runtime: win-x64
-- Self-contained: Yes
-- Single file: Yes (with native libraries extracted)
-- Embedded resources: All data files (Excel, CSVs)
-- Output: `Desktop\ADMerger_Build\`
-
-### Production Build - macOS (Standalone App)
-
-```bash
-./goDeployMAC.sh
-```
-
-Creates a clean build in `~/Desktop/ADMerger_Build/` with:
-- `ADMerger.app` - macOS application bundle with all dependencies
-
-**Build Configuration:**
+**Mac Build Configuration:**
 - Target: .NET 10.0 macOS
 - Runtime: osx-x64
 - Self-contained: Yes
 - Format: .app bundle
 - Embedded resources: All data files
 - Output: `~/Desktop/ADMerger_Build/`
+***
+## Installation (Windows 11)
+Assuming you already have dotnet@10 installed (see Prerequisites).
 
-**First Launch:**
-If you get a security warning when opening the app:
-1. Right-click on `ADMerger.app`
-2. Select "Open"
-3. Click "Open" in the security dialog
-4. After the first launch, it will open normally
+```bash
+# Open PowerShell / WSL or other CLI and clone the repository
+git clone https://github.com/TechAngelX/ADMerger.git
+cd ADMerger
 
-The app is completely standalone and can be copied to any Mac or moved to the Applications folder.
+# Build the app, and run in development mode
+dotnet run
 
+# Or better still, build a standalone desktop application
+.\goDeploy.ps1    
+```
+**Windows Build Configuration:**
+
+```
+- Target: .NET 10.0 Windows
+- Runtime: win-x64
+- Self-contained: Yes
+- Single file: Yes (with native libraries extracted)
+- Embedded resources: All data files (Excel, CSVs)
+- Output: `Desktop\ADMerger_Build\`
+```
+***
 ## Usage
 
 ![ADMerger Application Interface](readme_images/screenshot1.png)
-
+**How to use:**
 1. **Load Document 1**: SELECT In-tray file (latest applicants CSV)
 2. **Load Document 2**: Department Application reports CSV (detailed applicant data)
 3. **Process Files**: Cross-references by Student No., enriches with rankings and grades
@@ -214,16 +205,15 @@ Optionally select extra fields to include in your output reports. The applicatio
 
 ![Additional Fields Selection](readme_images/screenshot2.png)
 
-**How to use:**
 1. Expand the "Additional Output Fields (Optional)" section
-2. Select any fields you want to include from three categories:
-   - **Personal Information**: Known as, Email address, Gender, Date of Birth, Country of Nationality
-   - **Application Details**: Mode of attendance, Location, State, Academic year, Tag, Qualification end date, etc.
+2. Select any fields you want to include from three sections:
+   - **Personal Information**: Known as, Email address, Gender, Date of Birth, Nationality
+   
+   - **Application Details**: Location, State, Academic year, Tag, Qualification end date, etc.
    - **Decision Tracking**: Admissions decisions, dates, deposit status, reply deadlines
 3. Selected fields will appear at the end of the Excel output with **light blue column headers** to distinguish them from standard fields
-4. Date fields (e.g., Date of Birth) are automatically formatted as `dd/mm/yyyy` in Excel
-5. Use the Reset button to clear all selections
-
+4. Use the Reset button to clear all selections
+***
 ### Input Requirements
 
 **Document 1** must contain:
@@ -247,7 +237,7 @@ Generates one CSV per programme with columns:
 - **THERanking** (enriched)
 - CountryOfStudy, EquivalencyNote, OverallGradeGPA
 - **UKGrade** (enriched)
-
+***
 ## Dependencies
 
 - **CsvHelper** (33.1.0): CSV parsing with class mapping
@@ -263,28 +253,13 @@ Debug logs written to `Desktop\ranking_matches.log`:
 2025-11-24 20:34:06 - FUZZY MATCH: 'St. Andrews' -> 'St Andrews' = Rank 162
 2025-11-24 20:34:06 - NOT RANKED: 'Juniata College' (marked as not in THE Rankings)
 ```
-
-## Maintenance
-
-### Adding New Institution Mappings
-
-1. Edit `data/institution_mappings.csv`
-2. Add line: `SourceName,TargetName,MappingType`
-3. Restart application (no rebuild required)
-
-### Updating Rankings
-
-1. Replace `data/THE Ranking 2026.xlsx`
-2. Ensure Column A = Rank, Column B = Institution Name
-3. Restart application
-
 ### Adjusting Fuzzy Match Threshold
 
 Edit `Services/InstitutionMatchingService.cs`:
 ```csharp
 private const int MinimumMatchThreshold = 75; // Increase for stricter matching
 ```
-
+***
 ## Known Limitations
 
 - Fuzzy matching may incorrectly match similar Chinese university names (e.g., finance/economics institutions)
@@ -296,7 +271,23 @@ private const int MinimumMatchThreshold = 75; // Increase for stricter matching
 © Ricki Angel 2026 | TechAngelX
 Internal use only.
 
-## Support
 
-For issues or questions, check the debug log at `Desktop\ranking_matches.log` for matching details.
+## Disclaimer
+
+This tool is for personal or educational use only and comes without any warranty.
+***
+<h2 style="text-align: center;">Support</h2>
+<div align="center">
+  <span style="font-size: 1.4em; font-weight: 300;">
+    For issues or questions, feel free to reach out to me on GitHub.
+  </span>
+  <br /><br />
+  <a href="https://techangelx.com" target="_blank" rel="noopener noreferrer">
+    <img src="./readme_images/logo.png" alt="Tech Angel X Logo" width="70" height="70" style="vertical-align: middle; border-radius: 50%; border: 4px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+  </a>
+  <br /><br />
+  <span style="font-size: 1.4em; font-weight: 300;">
+    <b>Built by Ricki Angel</b> • <a href="https://techangelx.com" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">Tech Angel X</a>
+  </span>
+</div>
 
