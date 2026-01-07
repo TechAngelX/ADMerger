@@ -1,6 +1,6 @@
 # ADMerger
 
-![ADMerger Interface](readme_images/demo.gif) 
+![ADMerger Interface](readme_images/demo1.gif) 
 
 ADMerger is a bespoke, cross-platform standalone desktop application designed to efficiently handle large volumes of data and generate a customised, uniform spreadsheet with fields tailored to your specific needs. 
 ## Overview
@@ -9,13 +9,13 @@ ADMerger accesses two internal JSON files containing student application data an
 - THE World University Rankings (2026)
 - UK degree classification equivalencies
 - Country-specific grade conversions
-- Programme codes and mappings
+- University Programme codes and mappings
 
 The application uses intelligent fuzzy matching with Levenshtein distance algorithm to handle institution name variations and abbreviations.
 
 ## Features
 
-- **Automated Ranking Lookup**: Matches institution names against THE World University Rankings using exact and fuzzy matching
+- **Automated Ranking Lookup**: Matches institution names against T.H.E (Times) World University Rankings using exact and fuzzy matching
 - **Configurable Mappings**: Institution name variations, abbreviations, and joint degrees managed via CSV configuration
 - **Grade Classification**: Automatic UK grade classification based on country-specific equivalency rules
 - **Encoding Normalization**: Handles various text encodings and special characters in international names
@@ -41,7 +41,7 @@ ADMerger/
 │   ├── ApplicationRecord.cs        # Document 2 data model
 │   ├── OutputRecord.cs            # Merged output data model
 │   └── DegreeEquivalency.cs       # Country equivalency model
-├── Services/
+├── Services/ 
 │   ├── CsvService.cs              # CSV reading/writing with CsvHelper
 │   ├── EquivalencyService.cs      # Country grade equivalencies
 │   ├── RankingService.cs          # THE Rankings lookup with caching
@@ -72,7 +72,7 @@ ADMerger/
 
 The application uses a sophisticated Levenshtein distance-based fuzzy matching system:
 
-1. **Normalization**: Removes diacritics, common words (university, college), and special characters
+1. **Normalisation**: Removes diacritics, common words (university, college), and special characters
 2. **Word-Level Matching**: Compares significant words between search and candidate names
 3. **Exact Priority**: Exact word matches score 100%, fuzzy matches score 50%
 4. **Threshold Filtering**: Only matches scoring ≥75% are considered
@@ -101,14 +101,14 @@ Southwestern University of Finance and Economics,NOT_RANKED,NotRanked
 ```
 
 **Mapping Types:**
-- **Abbreviation**: Common abbreviations (MIT, UCLA, IIT Madras)
+- **Abbreviation**: Common abbreviations (MIT, LSE, UCLA, IIT Madras)
 - **JointDegree**: Transnational programs map to UK partner ranking
 - **NotRanked**: Institutions not in THE Rankings (prevents false matches)
 - **AltSpelling**: Regional spelling variations
 
 ### Ranking Status Values
 
-- **Numeric**: Single rank (1, 52, 143)
+- **Numeric**: Single rank (1, 22, 52, 143)
 - **Range**: Band ranking (601-800, 1001-1200)
 - **Reporter**: Participated in THE process but not ranked
 - **NR**: Not found in THE Rankings
@@ -117,7 +117,7 @@ Southwestern University of Finance and Economics,NOT_RANKED,NotRanked
 #### Before installing, please read... ####
 
 ### Required Software:
-Whether on Mac or Windows, you need to have the .NET 10 framework installed first. Install the framework on Terminal (Mac) or Powershghell / WSL / Windows CLI.
+Whether on Mac or Windows, you need to have the .NET 10 framework installed first. Install the framework on Terminal (Mac) or PowerShell / WSL / Windows CLI.
 
 This application has been tested on macOS Sonoma / Windows 11 or later. It may work on Windows 10 or earlier macOS versions, but this is not guaranteed.
 
@@ -158,7 +158,7 @@ This creates a standalone executable file on your desktop in `~/Desktop/ADMerger
 
 **Note:** The `goDeployMAC.sh` script is already executable when cloned, but you may get a 'Permission Denied' pop-up - common if you downloaded the ZIP. If you get this error, run `chmod +x goDeployMAC.sh` before executing it with `./goDeployMAC.sh`.
 
-**Mac Build Configuration:**
+**Mac Build Config:**
 - Target: .NET 10.0 macOS
 - Runtime: osx-x64
 - Self-contained: Yes
@@ -180,7 +180,7 @@ dotnet run
 # Or better still, build a standalone desktop application
 .\goDeploy.ps1    
 ```
-**Windows Build Configuration:**
+**Windows Build Config:**
 
 ```
 - Target: .NET 10.0 Windows
