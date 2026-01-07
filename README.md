@@ -1,6 +1,7 @@
 # ADMerger
 
-![ADMerger Interface](readme_images/screenshot1.png)
+![ADMerger Interface](readme_images/demo.gif) 
+
 ADMerger is a bespoke, cross-platform standalone desktop application designed to efficiently handle large volumes of data and generate a customised, uniform spreadsheet with fields tailored to your specific needs. 
 ## Overview
 
