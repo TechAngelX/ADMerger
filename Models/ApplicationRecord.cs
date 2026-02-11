@@ -36,5 +36,21 @@ namespace ADMerger.Models
         
         [Name("Grade Achieved/Pending")]
         public string? GradeAchievedPending { get; set; }
+
+        // Optional fields (user-selectable via checkboxes)
+        [Name("Gender")]
+        public string? Gender { get; set; }
+
+        [Name("Country of Nationality")]
+        public string? Nationality { get; set; }
+
+        [Name("Date of Birth")]
+        public string? DateOfBirth { get; set; }
+
+        [Name("Email address")]
+        public string? Email { get; set; }
+
+        [Name("Paid")]
+        public string? Paid { get; set; }
     }
 }

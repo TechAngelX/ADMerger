@@ -109,6 +109,18 @@ public partial class MainWindow : Window
     private bool _rankingsLoaded = false;
     public ObservableCollection<ProcessingItem> ProcessingItems { get; set; } = new ObservableCollection<ProcessingItem>();
 
+    private OutputSettings GetOutputSettings()
+    {
+        return new OutputSettings
+        {
+            IncludeGender = IncludeGenderCheckbox.IsChecked == true,
+            IncludeNationality = IncludeNationalityCheckbox.IsChecked == true,
+            IncludeDateOfBirth = IncludeDOBCheckbox.IsChecked == true,
+            IncludeEmail = IncludeEmailCheckbox.IsChecked == true,
+            IncludePaid = IncludePaidCheckbox.IsChecked == true
+        };
+    }
+
     [DllImport("winmm.dll")]
     private static extern long mciSendString(string strCommand, StringBuilder? strReturn, int iReturnLength, IntPtr hwndCallback);
 
@@ -213,6 +225,9 @@ public partial class MainWindow : Window
         ProcessButton.Content = "🛑 STOP";
         ProcessButton.Background = SolidColorBrush.Parse("#DC2626");
 
+        // Capture settings on UI thread before async work
+        var outputSettings = GetOutputSettings();
+
         try
         {
             await Task.Run(async () => {
@@ -257,7 +272,13 @@ public partial class MainWindow : Window
                             EquivalencyNote = app.EquivalencyNote,
                             OverallGradeGPA = app.OverallGradeGPA,
                             DegreeStatus = app.GradeAchievedPending,
-                            UKGrade = classification
+                            UKGrade = classification,
+                            // Optional fields
+                            Gender = app.Gender,
+                            Nationality = app.Nationality,
+                            DateOfBirth = app.DateOfBirth,
+                            Email = app.Email,
+                            Paid = app.Paid
                         });
                     }
 
@@ -269,7 +290,7 @@ public partial class MainWindow : Window
                     });
                 }
 
-                _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath);
+                _csvService.GenerateOutputFiles(outputRecords, _outputFolderPath, outputSettings);
 
                 if (!token.IsCancellationRequested)
                 {

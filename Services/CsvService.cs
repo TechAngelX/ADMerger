@@ -15,24 +15,48 @@ namespace ADMerger.Services
 {
     public class CsvService : ICsvService
     {
-        private static readonly List<string> ColumnOrder = new List<string>
+        private static readonly List<string> BaseColumnOrder = new List<string>
         {
             "ReceivedDate", "DueDate", "StudentNo", "Programme", "Forename", "Surname",
             "FeeStatus", "QualificationName",
             "DegreeSubject", "InstitutionName", "THERanking", "CountryOfStudy",
-            "EquivalencyNote", "OverallGradeGPA", "DegreeStatus", "UKGrade", "Decision", "AT", "Note",
-            "Progr. Adm", "Comment"
+            "EquivalencyNote", "OverallGradeGPA", "DegreeStatus", "UKGrade"
         };
-        
+
+        private static readonly List<string> TrailingColumns = new List<string>
+        {
+            "Decision", "AT", "Note", "Progr. Adm", "Comment"
+        };
+
         private static readonly HashSet<string> RightAlignedColumns = new HashSet<string>
         {
             "THERanking", "OverallGradeGPA", "DegreeStatus", "UKGrade"
         };
-        
+
         private static readonly HashSet<string> DateColumns = new HashSet<string>
         {
-            "ReceivedDate", "DueDate"
+            "ReceivedDate", "DueDate", "DateOfBirth"
         };
+
+        private List<string> GetColumnOrder(OutputSettings? settings)
+        {
+            var columns = new List<string>(BaseColumnOrder);
+
+            // Add trailing columns first
+            columns.AddRange(TrailingColumns);
+
+            // Optional fields go at the very end
+            if (settings != null)
+            {
+                if (settings.IncludeGender) columns.Add("Gender");
+                if (settings.IncludeNationality) columns.Add("Nationality");
+                if (settings.IncludeDateOfBirth) columns.Add("DateOfBirth");
+                if (settings.IncludeEmail) columns.Add("Email");
+                if (settings.IncludePaid) columns.Add("Paid");
+            }
+
+            return columns;
+        }
 
         public List<InTrayRecord> LoadInTrayRecords(string filePath)
         {
@@ -191,7 +215,13 @@ namespace ADMerger.Services
                         CountryOfStudy = GetValue(row, "Country of study"),
                         OverallGradeGPA = GetValue(row, "Overall  grade/GPA"),
                         EquivalencyNote = GetValue(row, "Equivalency note"),
-                        GradeAchievedPending = GetValue(row, "Grade Achieved/Pending")
+                        GradeAchievedPending = GetValue(row, "Grade Achieved/Pending"),
+                        // Optional fields
+                        Gender = GetValue(row, "Gender"),
+                        Nationality = GetValue(row, "Country of Nationality"),
+                        DateOfBirth = GetValue(row, "Date of Birth"),
+                        Email = GetValue(row, "Email address"),
+                        Paid = GetValue(row, "Paid")
                     };
                     records.Add(record);
                 }
@@ -200,30 +230,31 @@ namespace ADMerger.Services
             return records;
         }
         
-        public List<string> GenerateOutputFiles(List<OutputRecord> data, string outputFolderPath)
+        public List<string> GenerateOutputFiles(List<OutputRecord> data, string outputFolderPath, OutputSettings? settings = null)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            
+
+            var columnOrder = GetColumnOrder(settings);
             var programmeGroups = data.GroupBy(record => record.Programme).ToList();
             var outputPaths = new List<string>();
-            
+
             foreach (var group in programmeGroups)
             {
                 var programme = group.Key;
                 var records = group.OrderBy(r => ParseDate(r.ReceivedDate)).ToList();
-                
+
                 var outputPath = Path.Combine(
-                    outputFolderPath, 
+                    outputFolderPath,
                     programme + "_Latest_" + DateTime.Now.ToString("dd_MMM_yyyy_HHmm") + ".xlsx");
-                
+
                 using (var package = new ExcelPackage())
                 {
                     var worksheet = package.Workbook.Worksheets.Add(programme);
-                    
-                    for (int col = 0; col < ColumnOrder.Count; col++)
+
+                    for (int col = 0; col < columnOrder.Count; col++)
                     {
                         var headerCell = worksheet.Cells[1, col + 1];
-                        headerCell.Value = ColumnOrder[col];
+                        headerCell.Value = columnOrder[col];
                         headerCell.Style.Font.Bold = true;
                         headerCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         headerCell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(240, 240, 240));
@@ -235,9 +266,9 @@ namespace ADMerger.Services
                     int row = 2;
                     foreach (var record in records)
                     {
-                        for (int col = 0; col < ColumnOrder.Count; col++)
+                        for (int col = 0; col < columnOrder.Count; col++)
                         {
-                            string columnName = ColumnOrder[col];
+                            string columnName = columnOrder[col];
                             string value = columnName switch
                             {
                                 "ReceivedDate" => record.ReceivedDate ?? "",
@@ -256,6 +287,12 @@ namespace ADMerger.Services
                                 "OverallGradeGPA" => record.OverallGradeGPA ?? "",
                                 "DegreeStatus" => record.DegreeStatus ?? "",
                                 "UKGrade" => record.UKGrade ?? "",
+                                // Optional fields
+                                "Gender" => record.Gender ?? "",
+                                "Nationality" => record.Nationality ?? "",
+                                "DateOfBirth" => record.DateOfBirth ?? "",
+                                "Email" => record.Email ?? "",
+                                "Paid" => record.Paid ?? "",
                                 _ => ""
                             };
                             
@@ -331,17 +368,17 @@ namespace ADMerger.Services
                         row++;
                     }
                     
-                    int theRankingCol = ColumnOrder.IndexOf("THERanking") + 1;
+                    int theRankingCol = columnOrder.IndexOf("THERanking") + 1;
                     if (row > 2)
                     {
                         var theRankingRange = worksheet.Cells[2, theRankingCol, row - 1, theRankingCol];
                         var ignoredError = worksheet.IgnoredErrors.Add(theRankingRange);
                         ignoredError.NumberStoredAsText = true;
                     }
-                    
-                    for (int col = 1; col <= ColumnOrder.Count; col++)
+
+                    for (int col = 1; col <= columnOrder.Count; col++)
                     {
-                        string columnName = ColumnOrder[col - 1];
+                        string columnName = columnOrder[col - 1];
                         if (columnName == "EquivalencyNote")
                         {
                             worksheet.Column(col).Width = 18;

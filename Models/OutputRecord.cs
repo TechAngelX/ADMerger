@@ -20,5 +20,12 @@ namespace ADMerger.Models
         public string? DegreeStatus { get; set; } 
         public string? EquivalencyNote { get; set; }
         public string? UKGrade { get; set; }
+
+        // Optional fields (user-selectable via checkboxes)
+        public string? Gender { get; set; }
+        public string? Nationality { get; set; }
+        public string? DateOfBirth { get; set; }
+        public string? Email { get; set; }
+        public string? Paid { get; set; }
     }
 }
