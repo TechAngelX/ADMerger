@@ -31,24 +31,24 @@ ADMerger/
 +-- Program.cs                      # Application entry point with DI setup
 +-- MainForm.cs                     # Main UI form
 +-- Models/
-¦   +-- InTrayRecord.cs            # Document 1 data model
-¦   +-- ApplicationRecord.cs        # Document 2 data model
-¦   +-- OutputRecord.cs            # Merged output data model
-¦   +-- DegreeEquivalency.cs       # Country equivalency model
+ï¿½   +-- InTrayRecord.cs            # Document 1 data model
+ï¿½   +-- ApplicationRecord.cs        # Document 2 data model
+ï¿½   +-- OutputRecord.cs            # Merged output data model
+ï¿½   +-- DegreeEquivalency.cs       # Country equivalency model
 +-- Services/
-¦   +-- CsvService.cs              # CSV reading/writing with CsvHelper
-¦   +-- EquivalencyService.cs      # Country grade equivalencies
-¦   +-- RankingService.cs          # THE Rankings lookup with caching
-¦   +-- GradeClassificationService.cs  # UK grade determination
-¦   +-- InstitutionMatchingService.cs  # Fuzzy matching engine
+ï¿½   +-- CsvService.cs              # CSV reading/writing with CsvHelper
+ï¿½   +-- EquivalencyService.cs      # Country grade equivalencies
+ï¿½   +-- RankingService.cs          # THE Rankings lookup with caching
+ï¿½   +-- GradeClassificationService.cs  # UK grade determination
+ï¿½   +-- InstitutionMatchingService.cs  # Fuzzy matching engine
 +-- UI/Controls/
-¦   +-- ModernButton.cs            # Styled button component
-¦   +-- ModernFilePanel.cs         # Drag-drop file selector
+ï¿½   +-- ModernButton.cs            # Styled button component
+ï¿½   +-- ModernFilePanel.cs         # Drag-drop file selector
 +-- Utilities/
-¦   +-- DateFormatter.cs           # Date parsing and formatting
-¦   +-- TextNormalizer.cs          # Text cleaning and normalization
+ï¿½   +-- DateFormatter.cs           # Date parsing and formatting
+ï¿½   +-- TextNormalizer.cs          # Text cleaning and normalization
 +-- Configuration/
-¦   +-- ProgrammeMapping.cs        # Programme code mappings
+ï¿½   +-- ProgrammeMapping.cs        # Programme code mappings
 +-- data/
     +-- THE Ranking 2026.xlsx      # University rankings data
     +-- ucl_degree_equivalencies_FINAL.csv  # Country equivalencies
@@ -205,14 +205,28 @@ private const int MinimumMatchThreshold = 75; // Increase for stricter matching
 - Joint degree identification relies on specific keywords (e.g., "-Liverpool" in institution name)
 - THE Rankings "Reporter" status requires manual verification
 
+
+
 ## License
+Creative Commons:
+Â© Ricki Angel 2026 | TechAngelX
 
-© Ricki Angel 2025
-Internal use only.
+This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
 
-## Support
+## Disclaimer
 
-For issues or questions, check the debug log at `Desktop\ranking_matches.log` for matching details.
+This project is for personal or educational use only and comes without any warranty.
+***
+<h2 align="center">Support</h2>
+<div align="center">
+  For issues or questions, feel free to reach out to me on GitHub.
+  <br /><br />
+  <a href="https://techangelx.com" target="_blank" rel="noopener noreferrer">
+    <img src="./readme_images/logo.png" alt="Tech Angel X Logo" width="70" height="70" style="border-radius: 50%; border: 4px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+  </a>
+  <br /><br />
+  <b>Built by Ricki Angel</b> â€¢ <a href="https://techangelx.com" target="_blank" rel="noopener noreferrer">Tech Angel X</a>
+</div>
 
 
 
