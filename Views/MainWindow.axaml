@@ -7,6 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
         x:Class="ADMerger.Views.MainWindow"
         Title="ADMerger - Admissions Data Processor"
+        Icon="/Assets/AppIcon.png"
         Width="1100" Height="750"
         WindowStartupLocation="CenterScreen"
         TransparencyLevelHint="AcrylicBlur"
@@ -27,14 +28,15 @@
         <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="30,40,30,30">
             
             <StackPanel Grid.Row="0" Margin="0,0,0,25">
-                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                    <Border Background="#2563EB" CornerRadius="8" Width="40" Height="40">
-                        <TextBlock Text="AD" Foreground="White" FontWeight="Bold" 
-                                 VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16"/>
-                    </Border>
-                    <StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Image Source="/Assets/AppIcon.png" Width="48" Height="48"/>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="ADMerger" FontSize="24" FontWeight="Bold" Foreground="#1E293B" LetterSpacing="-0.5"/>
-                        <TextBlock x:Name="VersionLabel" Text="v1.0" FontSize="12" Foreground="#64748B"/>
+                        <TextBlock Text="Admissions Data Merge Engine" FontSize="12" Foreground="#64748B"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock x:Name="VersionLabel" Text="v1.0" FontSize="11" Foreground="#94A3B8"/>
+                            <TextBlock Text="(c) 2026 ZoopByte" FontSize="11" Foreground="#94A3B8"/>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </StackPanel>

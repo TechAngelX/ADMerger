@@ -1,10 +1,13 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 dotnet publish -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ~/Desktop/ADMerger_Build
 
 cd ~/Desktop/ADMerger_Build
 
 mkdir -p ADMerger.app/Contents/MacOS
+mkdir -p ADMerger.app/Contents/Resources
 
 cat <<EOF > ADMerger.app/Contents/Info.plist
 <?xml version="1.0" encoding="UTF-8"?>
@@ -22,7 +25,7 @@ cat <<EOF > ADMerger.app/Contents/Info.plist
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>1.0.$(date +%y).$(date +%m%d)</string>
     <key>LSMinimumSystemVersion</key>
     <string>10.12</string>
     <key>LSUIElement</key>
@@ -32,6 +35,7 @@ cat <<EOF > ADMerger.app/Contents/Info.plist
 EOF
 
 mv ADMerger ADMerger.app/Contents/MacOS/
+cp "$SCRIPT_DIR/Assets/AppIcon.icns" ADMerger.app/Contents/Resources/AppIcon.icns
 
 mv ADMerger.app ~/Desktop/
 

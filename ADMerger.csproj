@@ -10,13 +10,15 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <GenerateProgramFile>false</GenerateProgramFile>
 
-    <Version>1.0.$([System.DateTime]::UtcNow.ToString("yy"))</Version>
-    <AssemblyVersion>1.0.$([System.DateTime]::UtcNow.ToString("yy"))</AssemblyVersion>
-    <FileVersion>1.0.$([System.DateTime]::UtcNow.ToString("yy"))</FileVersion>
-    <InformationalVersion>1.0.$([System.DateTime]::UtcNow.ToString("yyMMdd"))</InformationalVersion>
+    <Version>1.0.$([System.DateTime]::UtcNow.ToString("yy")).$([System.DateTime]::UtcNow.ToString("MMdd"))</Version>
+    <AssemblyVersion>1.0.$([System.DateTime]::UtcNow.ToString("yy")).$([System.DateTime]::UtcNow.ToString("MMdd"))</AssemblyVersion>
+    <FileVersion>1.0.$([System.DateTime]::UtcNow.ToString("yy")).$([System.DateTime]::UtcNow.ToString("MMdd"))</FileVersion>
+    <InformationalVersion>1.0.$([System.DateTime]::UtcNow.ToString("yy")).$([System.DateTime]::UtcNow.ToString("MMdd"))</InformationalVersion>
     
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -43,5 +45,9 @@
     <Content Include="audio\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\AppIcon.png" />
   </ItemGroup>
 </Project>

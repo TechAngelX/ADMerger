@@ -276,7 +276,7 @@ public partial class MainWindow : Window
                             // Optional fields
                             Gender = app.Gender,
                             Nationality = app.Nationality,
-                            DateOfBirth = app.DateOfBirth,
+                            DateOfBirth = DateFormatter.FormatDate(app.DateOfBirth ?? ""),
                             Email = app.Email,
                             Paid = app.Paid
                         });
@@ -333,8 +333,8 @@ private void SetVersion()
     var v = Assembly.GetExecutingAssembly().GetName().Version;
     if (v != null)
     {
-        // Major = 1, Minor = 0, Build = 25
-        VersionLabel.Text = $"v{v.Major}.{v.Minor}.{v.Build}";
+        // Major.Minor.YY.MMDD e.g. v1.0.26.0215
+        VersionLabel.Text = $"v{v.Major}.{v.Minor}.{v.Build}.{v.Revision:D4}";
     }
 }
     private async void BrowseInTrayButton_Click(object? sender, RoutedEventArgs e)
