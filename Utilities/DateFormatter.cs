@@ -45,13 +45,13 @@ namespace ADMerger.Utilities
                 if (DateTime.TryParseExact(receivedDateStr, format, CultureInfo.InvariantCulture, 
                     DateTimeStyles.None, out DateTime date))
                 {
-                    return date.AddDays(42).ToString("dd/MM/yyyy");
+                    return date.AddDays(56).ToString("dd/MM/yyyy");
                 }
             }
             
             if (DateTime.TryParse(receivedDateStr, out DateTime generalDate))
             {
-                return generalDate.AddDays(42).ToString("dd/MM/yyyy");
+                return generalDate.AddDays(56).ToString("dd/MM/yyyy");
             }
             
             return "";
