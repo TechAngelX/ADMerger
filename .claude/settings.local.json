@@ -15,7 +15,10 @@
       "Read(//Users/xeon2035/Desktop/**)",
       "Bash(dotnet test *)",
       "Bash(cp /Users/xeon2035/.claude/projects/-Users-xeon2035-Documents-LOCALDEV-admerger/memory/project_admerger_migration.md /Users/xeon2035/.claude/projects/-Users-xeon2035-Documents-LOCALDEV-dossier/memory/project_admerger_migration.md)",
-      "Bash(cp /Users/xeon2035/.claude/projects/-Users-xeon2035-Documents-LOCALDEV-admerger/memory/project_grade_data_sources.md /Users/xeon2035/.claude/projects/-Users-xeon2035-Documents-LOCALDEV-dossier/memory/project_grade_data_sources.md)"
+      "Bash(cp /Users/xeon2035/.claude/projects/-Users-xeon2035-Documents-LOCALDEV-admerger/memory/project_grade_data_sources.md /Users/xeon2035/.claude/projects/-Users-xeon2035-Documents-LOCALDEV-dossier/memory/project_grade_data_sources.md)",
+      "Bash(git -C /Users/xeon2035/Documents/LOCALDEV/admerger log --oneline --all)",
+      "Bash(git -C /Users/xeon2035/Documents/LOCALDEV/admerger log --all --grep=\"Co-Authored-By\" --oneline)",
+      "Bash(git *)"
     ]
   }
 }
