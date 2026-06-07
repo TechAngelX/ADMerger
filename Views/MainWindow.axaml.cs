@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Avalonia.Input;
 using System.ComponentModel;
 using System.Text;
 using ADMerger.data;
@@ -102,7 +103,7 @@ public partial class MainWindow : Window
 
     private string _inTrayFilePath = string.Empty;
     private string _appReportsFilePath = string.Empty;
-    private string _outputFolderPath = string.Empty;
+    private readonly string _outputFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
     private CancellationTokenSource? _cancellationTokenSource;
     private bool _isProcessing = false;
@@ -139,11 +140,20 @@ public partial class MainWindow : Window
 
         BrowseInTrayButton.Click += BrowseInTrayButton_Click;
         BrowseAppReportsButton.Click += BrowseAppReportsButton_Click;
-        BrowseOutputButton.Click += BrowseOutputButton_Click;
         ProcessButton.Click += ProcessButton_Click;
         ClearLogButton.Click += ClearLogButton_Click;
         ResetButton.Click += ResetButton_Click;
         ExitButton.Click += ExitButton_Click;
+
+        InTrayCard.AddHandler(DragDrop.DropEvent, OnInTrayDrop);
+        InTrayCard.AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        InTrayCard.AddHandler(DragDrop.DragEnterEvent, (_, _) => SetCardDragState(InTrayCard, true));
+        InTrayCard.AddHandler(DragDrop.DragLeaveEvent, (_, _) => SetCardDragState(InTrayCard, false));
+
+        AppReportsCard.AddHandler(DragDrop.DropEvent, OnAppReportsDrop);
+        AppReportsCard.AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        AppReportsCard.AddHandler(DragDrop.DragEnterEvent, (_, _) => SetCardDragState(AppReportsCard, true));
+        AppReportsCard.AddHandler(DragDrop.DragLeaveEvent, (_, _) => SetCardDragState(AppReportsCard, false));
     }
 
     private async void InitializeDataAsync()
@@ -165,8 +175,7 @@ public partial class MainWindow : Window
     private void CheckReadyToProcess()
     {
         bool filesSelected = !string.IsNullOrEmpty(_inTrayFilePath) &&
-                             !string.IsNullOrEmpty(_appReportsFilePath) &&
-                             !string.IsNullOrEmpty(_outputFolderPath);
+                             !string.IsNullOrEmpty(_appReportsFilePath);
         ProcessButton.IsEnabled = filesSelected && _rankingsLoaded;
         if (!_rankingsLoaded) StatusLabel.Text = "Waiting for rankings...";
         else StatusLabel.Text = filesSelected ? "Ready to start" : "Waiting for files...";
@@ -270,7 +279,7 @@ public partial class MainWindow : Window
                             THERanking = _rankingService.GetRanking(app.InstitutionName ?? ""),
                             CountryOfStudy = app.CountryOfStudy,
                             EquivalencyNote = app.EquivalencyNote,
-                            OverallGradeGPA = app.OverallGradeGPA,
+                            OverallGradeGPA = _gradeService.GetPreferredGradeDisplay(app.OverallGradeGPA ?? "", app.EquivalencyNote ?? ""),
                             DegreeStatus = app.GradeAchievedPending,
                             UKGrade = classification,
                             // Optional fields
@@ -357,14 +366,37 @@ private void SetVersion()
         }
     }
 
-    private async void BrowseOutputButton_Click(object? sender, RoutedEventArgs e)
+    private void OnDragOver(object? sender, DragEventArgs e)
     {
-        var folders = await GetTopLevel(this)!.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Select Output" });
-        if (folders.Count > 0) {
-            _outputFolderPath = folders[0].Path.LocalPath;
-            OutputFolderLabel.Text = _outputFolderPath;
-            CheckReadyToProcess();
-        }
+        e.DragEffects = e.Data.Contains(DataFormats.Files) ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void OnInTrayDrop(object? sender, DragEventArgs e)
+    {
+        SetCardDragState(InTrayCard, false);
+        var file = e.Data.GetFiles()?.FirstOrDefault();
+        if (file == null) return;
+        _inTrayFilePath = file.Path.LocalPath;
+        InTrayFileLabel.Text = Path.GetFileName(_inTrayFilePath);
+        CheckReadyToProcess();
+    }
+
+    private void OnAppReportsDrop(object? sender, DragEventArgs e)
+    {
+        SetCardDragState(AppReportsCard, false);
+        var file = e.Data.GetFiles()?.FirstOrDefault();
+        if (file == null) return;
+        _appReportsFilePath = file.Path.LocalPath;
+        AppReportsFileLabel.Text = Path.GetFileName(_appReportsFilePath);
+        CheckReadyToProcess();
+    }
+
+    private void SetCardDragState(Border card, bool active)
+    {
+        card.Background = active ? SolidColorBrush.Parse("#EFF6FF") : SolidColorBrush.Parse("#CCFFFFFF");
+        card.BorderBrush = active ? SolidColorBrush.Parse("#2563EB") : SolidColorBrush.Parse("#80FFFFFF");
+        card.BorderThickness = new Thickness(active ? 2 : 1);
     }
 
     private void PlayConfirmationSound()
@@ -414,11 +446,9 @@ private void SetVersion()
     {
         _inTrayFilePath = string.Empty;
         _appReportsFilePath = string.Empty;
-        _outputFolderPath = string.Empty;
 
         InTrayFileLabel.Text = "No file selected";
         AppReportsFileLabel.Text = "No file selected";
-        OutputFolderLabel.Text = "No folder selected";
 
         ProcessingItems.Clear();
         MainProgressBar.Value = 0;

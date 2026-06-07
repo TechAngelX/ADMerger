@@ -30,7 +30,7 @@ namespace ADMerger.Services
 
         private static readonly HashSet<string> RightAlignedColumns = new HashSet<string>
         {
-            "THERanking", "OverallGradeGPA", "DegreeStatus", "UKGrade"
+            "THERanking", "DegreeStatus", "UKGrade"
         };
 
         private static readonly HashSet<string> DateColumns = new HashSet<string>
@@ -250,6 +250,8 @@ namespace ADMerger.Services
                 using (var package = new ExcelPackage())
                 {
                     var worksheet = package.Workbook.Worksheets.Add(programme);
+                    worksheet.View.FreezePanes(2, 1);
+                    worksheet.View.ZoomScale = 180;
 
                     for (int col = 0; col < columnOrder.Count; col++)
                     {
@@ -338,15 +340,8 @@ namespace ADMerger.Services
                             }
                             else if (columnName == "OverallGradeGPA" && !string.IsNullOrWhiteSpace(value))
                             {
-                                if (double.TryParse(value.Replace("%", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out double percentValue))
-                                {
-                                    cell.Value = percentValue / 100.0;
-                                    cell.Style.Numberformat.Format = "0%";
-                                }
-                                else
-                                {
-                                    cell.Value = value;
-                                }
+                                cell.Style.Numberformat.Format = "@";
+                                cell.Value = value;
                             }
                             else if (columnName == "UKGrade" && !string.IsNullOrWhiteSpace(value))
                             {

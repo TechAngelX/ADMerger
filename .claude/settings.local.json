@@ -10,7 +10,10 @@
       "Bash(python3:*)",
       "Bash(LOGO=\"readme_images/logo.png\":*)",
       "Bash(sips:*)",
-      "Bash(iconutil:*)"
+      "Bash(iconutil:*)",
+      "Bash(dotnet script *)",
+      "Read(//Users/xeon2035/Desktop/**)",
+      "Bash(dotnet test *)"
     ]
   }
 }

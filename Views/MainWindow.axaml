@@ -41,9 +41,9 @@
                 </StackPanel>
             </StackPanel>
 
-            <Grid Grid.Row="1" ColumnDefinitions="*, 20, *, 20, *" Margin="0,0,0,20">
-                
-                <Border Grid.Column="0" Classes="GlassCard">
+            <Grid Grid.Row="1" ColumnDefinitions="*, 20, *" Margin="0,0,0,20">
+
+                <Border x:Name="InTrayCard" Grid.Column="0" Classes="GlassCard" DragDrop.AllowDrop="True">
                     <StackPanel Spacing="10">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <TextBlock Text="📥" FontSize="16"/>
@@ -51,11 +51,12 @@
                         </StackPanel>
                         <TextBlock Text="New applicants .csv / .xlsx" FontSize="11" Foreground="#94A3B8"/>
                         <Button x:Name="BrowseInTrayButton" Classes="Modern" Content="Select File" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                        <TextBlock Text="or drag &amp; drop here" FontSize="10" Foreground="#CBD5E1" HorizontalAlignment="Center"/>
                         <TextBlock x:Name="InTrayFileLabel" Text="No file selected" FontSize="11" Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="2" Classes="GlassCard">
+                <Border x:Name="AppReportsCard" Grid.Column="2" Classes="GlassCard" DragDrop.AllowDrop="True">
                     <StackPanel Spacing="10">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <TextBlock Text="📊" FontSize="16"/>
@@ -63,19 +64,8 @@
                         </StackPanel>
                         <TextBlock Text="Dept Reports .csv / .xlsx" FontSize="11" Foreground="#94A3B8"/>
                         <Button x:Name="BrowseAppReportsButton" Classes="Modern" Content="Select File" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                        <TextBlock Text="or drag &amp; drop here" FontSize="10" Foreground="#CBD5E1" HorizontalAlignment="Center"/>
                         <TextBlock x:Name="AppReportsFileLabel" Text="No file selected" FontSize="11" Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Column="4" Classes="GlassCard">
-                    <StackPanel Spacing="10">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="📂" FontSize="16"/>
-                            <TextBlock Text="Output" FontWeight="SemiBold" Foreground="#334155"/>
-                        </StackPanel>
-                        <TextBlock Text="Save generated files to" FontSize="11" Foreground="#94A3B8"/>
-                        <Button x:Name="BrowseOutputButton" Classes="Modern" Content="Select Folder" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-                        <TextBlock x:Name="OutputFolderLabel" Text="No folder selected" FontSize="11" Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                 </Border>
             </Grid>
